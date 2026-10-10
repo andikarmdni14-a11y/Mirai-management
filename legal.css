@@ -1,0 +1,23 @@
+/* v22: halaman hukum (Syarat & Ketentuan, Kebijakan Privasi) */
+:root{--bg:#FAFAFA;--cd:#fff;--tx:#09090B;--mu:#52525B;--bd:#E4E4E7;--em:#047857}
+[data-theme=dark]{--bg:#09090B;--cd:#111113;--tx:#FAFAFA;--mu:#A1A1AA;--bd:#27272A;--em:#10B981}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:400 16px/1.7 Geist,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-text-size-adjust:100%}
+.wrap{max-width:760px;margin:0 auto;padding:calc(20px + env(safe-area-inset-top,0px)) 20px calc(48px + env(safe-area-inset-bottom,0px))}
+header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+header a.b{display:inline-flex;align-items:center;gap:10px;color:var(--tx);text-decoration:none;font-weight:600}
+header img{border-radius:10px}
+nav a{color:var(--mu);margin-left:14px;font-size:14px}
+h1{font-size:30px;line-height:1.25;margin:28px 0 4px}
+h2{font-size:19px;margin:34px 0 8px;line-height:1.35}
+p,li{color:var(--tx)}
+.meta{color:var(--mu);font-size:14px;margin:0 0 20px}
+ul,ol{padding-left:22px}li{margin:6px 0}
+a{color:var(--em)}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:14px;display:block;overflow-x:auto}
+th,td{border:1px solid var(--bd);padding:9px 11px;text-align:left;vertical-align:top}
+th{background:var(--cd)}
+.box{border:1px solid var(--bd);background:var(--cd);border-radius:12px;padding:14px 16px;margin:16px 0}
+footer{margin-top:40px;padding-top:16px;border-top:1px solid var(--bd);color:var(--mu);font-size:14px}
+:focus-visible{outline:2px solid var(--em);outline-offset:2px}
+@media print{header nav,footer a{display:none}}

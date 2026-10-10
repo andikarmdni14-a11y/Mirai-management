@@ -1,0 +1,93 @@
+{
+  "id": "./",
+  "name": "Mirai Management",
+  "short_name": "Mirai",
+  "description": "Catat transaksi, anggaran, utang, dan cicilan. Bisa dipakai tanpa sinyal.",
+  "lang": "id",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#FFFFFF",
+  "theme_color": "#09090B",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": [
+    "finance",
+    "productivity"
+  ],
+  "prefer_related_applications": false,
+  "dir": "ltr",
+  "shortcuts": [
+    {
+      "name": "Tambah pengeluaran",
+      "short_name": "Pengeluaran",
+      "description": "Langsung catat pengeluaran baru",
+      "url": "./?act=expense",
+      "icons": [
+        {
+          "src": "icons/sc-expense.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Tambah pemasukan",
+      "short_name": "Pemasukan",
+      "description": "Langsung catat pemasukan baru",
+      "url": "./?act=income",
+      "icons": [
+        {
+          "src": "icons/sc-income.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Tagihan",
+      "short_name": "Tagihan",
+      "description": "Lihat tagihan yang akan jatuh tempo",
+      "url": "./?act=bills",
+      "icons": [
+        {
+          "src": "icons/sc-bill.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Laporan",
+      "short_name": "Laporan",
+      "description": "Buka laporan keuangan",
+      "url": "./?act=report",
+      "icons": [
+        {
+          "src": "icons/sc-report.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

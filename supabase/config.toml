@@ -1,0 +1,45 @@
+# Konfigurasi Supabase CLI untuk Mirai (v22). Hanya dipakai bila Anda mengelola proyek lewat `supabase` CLI (supabase link, supabase config push).
+# Bila memakai dashboard saja: salin isi supabase/templates/*.html ke Authentication > Emails, lihat docs/SETUP-V22.md.
+[auth]
+site_url = "https://mirai-management.vercel.app"
+additional_redirect_urls = ["https://mirai-management.vercel.app/login.html", "https://mirai-management.vercel.app/index.html"]
+
+[auth.email]
+enable_signup = true
+enable_confirmations = true
+otp_length = 6        # login.js memakai 6 kotak digit
+otp_expiry = 3600
+
+# SMTP sendiri (contoh Resend). Isi RESEND_API_KEY di environment saat menjalankan `supabase config push`.
+# Domain pengirim harus terverifikasi (SPF, DKIM) di Resend.
+[auth.email.smtp]
+enabled = true
+host = "smtp.resend.com"
+port = 465
+user = "resend"
+pass = "env(RESEND_API_KEY)"
+admin_email = "no-reply@GANTI-DENGAN-DOMAIN-ANDA.id"
+sender_name = "Mirai Management"
+
+# Dengan SMTP sendiri batas bawaan 2 email/jam dihapus; atur sesuai kebutuhan (per jam, seluruh proyek).
+[auth.rate_limit]
+email_sent = 60
+
+[auth.email.template.confirmation]
+subject = "Kode verifikasi Mirai Anda"
+content_path = "./supabase/templates/confirmation.html"
+[auth.email.template.recovery]
+subject = "Atur ulang kata sandi Mirai"
+content_path = "./supabase/templates/recovery.html"
+[auth.email.template.magic_link]
+subject = "Tautan masuk Mirai"
+content_path = "./supabase/templates/magic_link.html"
+[auth.email.template.invite]
+subject = "Anda diundang ke Mirai"
+content_path = "./supabase/templates/invite.html"
+[auth.email.template.email_change]
+subject = "Konfirmasi perubahan email Mirai"
+content_path = "./supabase/templates/email_change.html"
+[auth.email.template.reauthentication]
+subject = "Kode konfirmasi Mirai"
+content_path = "./supabase/templates/reauthentication.html"

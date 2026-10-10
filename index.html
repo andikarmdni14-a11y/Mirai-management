@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" id="tc" content="#09090B">
+  <script src="theme-init.js"></script>
+  <noscript>
+    <link rel="stylesheet" href="noscript.css">
+  </noscript>
+  <link rel="stylesheet" href="splash.css">
+  <link rel="stylesheet" href="critical.css">
+  <title>Mirai Management: Aplikasi Manajemen Keuangan Pribadi</title>
+  <meta name="description"
+    content="Mirai Management membantu Anda mencatat transaksi, mengatur anggaran, memantau banyak dompet, dan mencapai tujuan keuangan dengan laporan yang jelas dan aman.">
+  <meta name="robots" content="index,follow">
+  <link rel="canonical" href="https://mirai-management.vercel.app/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Mirai Management">
+  <meta property="og:locale" content="id_ID">
+  <meta property="og:title" content="Mirai Management: Aplikasi Manajemen Keuangan Pribadi">
+  <meta property="og:description"
+    content="Mirai Management membantu Anda mencatat transaksi, mengatur anggaran, memantau banyak dompet, dan mencapai tujuan keuangan dengan laporan yang jelas dan aman.">
+  <meta property="og:image" content="https://mirai-management.vercel.app/icons/icon-512.png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+  <meta property="og:url" content="https://mirai-management.vercel.app/">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Mirai Management: Aplikasi Manajemen Keuangan Pribadi">
+  <meta name="twitter:description"
+    content="Mirai Management membantu Anda mencatat transaksi, mengatur anggaran, memantau banyak dompet, dan mencapai tujuan keuangan dengan laporan yang jelas dan aman.">
+  <meta name="twitter:image" content="https://mirai-management.vercel.app/icons/icon-512.png">
+  <link rel="icon" href="icons/favicon-48.png" type="image/png" sizes="48x48">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Mirai">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Font: tidak memblokir render (media=print lalu dialihkan saat selesai). Teks tampil dulu dengan font sistem (swap). -->
+  <link rel="stylesheet" id="gf" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap" media="print" data-async>
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap"></noscript>
+  <!-- CSS lengkap: dimuat paralel tanpa memblokir render; CSS kritis (login, splash, footer) sudah inline di atas. -->
+  <link rel="preload" as="style" href="style.css" data-async>
+  <noscript><link rel="stylesheet" href="style.css"></noscript>
+  <script src="load-css.js"></script>
+  <script
+    type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"SoftwareApplication","name":"Mirai Management","applicationCategory":"FinanceApplication","operatingSystem":"Web, Android, iOS (PWA)","inLanguage":"id","description":"Mirai Management membantu Anda mencatat transaksi, mengatur anggaran, memantau banyak dompet, dan mencapai tujuan keuangan dengan laporan yang jelas dan aman.","url":"https://mirai-management.vercel.app/","image":"https://mirai-management.vercel.app/icons/icon-512.png","offers":{"@type":"Offer","price":"0","priceCurrency":"IDR"}},{"@type":"Organization","name":"Mirai Management","url":"https://mirai-management.vercel.app/","logo":"https://mirai-management.vercel.app/logo-mirai.png","email":"miraimanagement8@gmail.com","telephone":"+62-895-3673-07799","address":{"@type":"PostalAddress","streetAddress":"Jl. Kelapa Dua No. 26","addressLocality":"Jakarta Utara","postalCode":"14120","addressCountry":"ID"}}]}</script>
+  <!-- Google Analytics, Chart.js, QR Code, dan Supabase SDK tidak lagi dimuat di sini: lihat config.js (pemuat malas). -->
+  <script defer src="config.js"></script>
+  <script defer src="monitor.js"></script>
+  <script defer src="core.js"></script>
+  <script defer src="pwa.js"></script>
+  <script defer src="sync.js"></script>
+  <script defer src="app.js"></script>
+  <script defer src="lock.js"></script>
+  <script defer src="auth.js"></script>
+</head>
+
+<body>
+  <div id="splash" role="status" aria-busy="true" aria-live="polite" aria-label="Memuat Mirai Management">
+    <div class="sp-in">
+      <div class="sp-logo"><img src="img/logo-160.webp" alt="" width="76" height="76" fetchpriority="high" decoding="async"></div>
+      <div class="sp-name">Mirai Management</div>
+      <div class="sp-bar" id="spp" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"
+        aria-label="Progres pemuatan"><i id="spb"></i></div>
+      <p class="sp-txt" id="spt">Menginisialisasi ruang kerja...</p>
+      <button type="button" class="sp-retry" id="spr" hidden data-act="reload">Muat Ulang</button>
+    </div>
+  </div>
+  <a class="skip" href="#main">Lewati ke konten utama</a>
+  <h1 class="sr-only">Mirai Management, aplikasi manajemen keuangan pribadi</h1>
+
+  <div id="login" role="main">
+    <div class="card"><img src="img/logo-160.webp" alt="Mirai Logo" class="brand-logo login-logo" width="44" height="44"
+        fetchpriority="high" decoding="async">
+      <h2 id="lt" class="t1">Masuk ke Mirai Management</h2><small>Data tersimpan aman di cloud, dilindungi kata sandi dan 2FA.</small>
+      <form class="d-grid gap-12 mt-18" id="lf">
+        <div class="d-grid gap-10" id="s1"><input id="em" aria-label="Email" type="email" placeholder="Email"
+            required autocomplete="username"><input id="pw" aria-label="Kata sandi" type="password"
+            placeholder="Kata sandi (min. 8 karakter)" required minlength="8" autocomplete="current-password"><input
+            id="ob" aria-label="Saldo awal dalam rupiah" type="text" inputmode="numeric" data-cur autocomplete="off"
+            placeholder="Saldo awal (Rp)" hidden></div>
+        <div class="d-grid gap-10" id="s2" hidden>
+          <div class="d-grid pi-center" id="qr"></div><small id="sk"></small><input id="code"
+            inputmode="numeric" maxlength="6" placeholder="Kode 6 digit" aria-label="Kode 2FA"
+            autocomplete="one-time-code">
+        </div>
+        <div class="err" id="er"></div><button class="bt" id="lb">Masuk</button><button type="button" class="bt g"
+          id="sw">Belum punya akun? Daftar</button>
+      </form>
+    </div>
+  </div>
+
+  <div id="app" hidden>
+    <nav class="nav" id="nv" aria-label="Navigasi utama">
+      <div class="br"><img src="img/logo-160.webp" alt="Mirai Logo" class="brand-logo" width="36" height="36"
+          loading="lazy" decoding="async"><span>Mirai Management</span></div>
+    </nav>
+    <header class="top"><div class="tb"><img src="img/logo-160.webp" alt="" class="brand-logo" width="32" height="32" decoding="async"><span>Mirai Management</span></div><span class="sy" id="sy" role="status" aria-live="polite" hidden></span><button class="avb" id="avb" type="button" aria-haspopup="dialog" aria-label="Menu profil"><span id="avl">A</span><i id="avd" hidden></i></button></header>
+    <main id="main" tabindex="-1">
+      <h2 id="ttl" class="t1 mb-18" hidden></h2>
+      <div class="card" id="np" hidden>
+        <h3 class="ct">Notifikasi</h3>
+        <div id="nl"></div>
+      </div>
+
+      <section id="v-dash">
+        <div class="grid g3">
+          <div class="card hero">
+            <div class="rw"><span class="rw jc-start gap-4"><small>Total
+                  saldo</small><button class="eyeb" id="eye" aria-label="Sembunyikan saldo"
+                  aria-pressed="false"></button></span><span class="chipmark">MIRAI</span></div>
+            <div class="big" id="bal"></div><small id="net"></small>
+          </div>
+          <div class="card"><small>Pemasukan bulan ini</small>
+            <div class="big in" id="inc"></div>
+          </div>
+          <div class="card"><small>Pengeluaran bulan ini</small>
+            <div class="big" id="exp"></div>
+          </div>
+        </div>
+        <div class="grid g2 wrow">
+          <div class="minw-0">
+            <div class="rw mb-10">
+              <h3 class="ct m-0">Dompet</h3><span class="rw"><button class="bt s g" data-act="link-account">Hubungkan akun</button><button class="bt s g" data-act="transfer">Transfer</button></span>
+            </div>
+            <div id="wl" role="region" aria-label="Daftar dompet. Geser ke samping untuk melihat dompet lainnya" tabindex="0"></div>
+            <div class="wnv" id="wnv" hidden>
+              <button type="button" class="wnb" id="wpv" aria-label="Dompet sebelumnya"><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+              <div class="wdt" id="wdt"></div>
+              <button type="button" class="wnb" id="wnx" aria-label="Dompet berikutnya"><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+            </div>
+          </div>
+          <div class="card" id="stk">
+            <div class="rw">
+              <div><small>Streak pencatatan</small>
+                <div class="big" id="stn">0 hari</div>
+              </div>
+              <div class="ringw"><svg class="ring" viewBox="0 0 80 80" width="84" height="84" aria-hidden="true">
+                  <circle class="rb" cx="40" cy="40" r="34" pathLength="100" />
+                  <circle class="rf" id="rf" cx="40" cy="40" r="34" pathLength="100" />
+                </svg><b id="rn">0/7</b></div>
+            </div><small class="mt-12" id="stt"></small>
+          </div>
+        </div>
+        <div class="card mb-16" id="qk" hidden>
+          <div class="rw mb-10"><h3 class="ct m-0">Catat cepat</h3><button class="bt s g" data-act="go-auto">Atur template</button></div>
+          <div class="tpc" id="qkl"></div>
+        </div>
+        <div id="dm">
+          <div class="card insight"><span class="ico" id="ii"></span>
+            <div><small>Wawasan prediktif <span id="ict"></span></small>
+              <p id="it"></p>
+            </div>
+          </div>
+          <div class="grid g2">
+            <div class="card">
+              <h3 class="ct">Tren pemasukan dan pengeluaran</h3>
+              <div class="cv"><canvas id="line" role="img"
+                  aria-label="Grafik garis tren pemasukan dan pengeluaran enam bulan terakhir"></canvas></div>
+              <p class="lgn" id="trn" hidden>Baru ada data satu bulan. Garis tren terbentuk mulai bulan berikutnya.</p>
+            </div>
+            <div class="card">
+              <h3 class="ct">Pengeluaran per kategori</h3>
+              <div class="cv" id="piecv"><canvas id="pie" role="img"
+                  aria-label="Diagram lingkaran pengeluaran per kategori bulan ini"></canvas></div>
+              <ul class="lgd" id="pielg" aria-label="Rincian pengeluaran per kategori bulan ini"></ul>
+              <p class="lgn" id="pieem" hidden>Belum ada pengeluaran bulan ini. Diagram muncul setelah Anda mencatat pengeluaran.</p>
+            </div>
+          </div>
+          <div class="card">
+            <h3 class="ct">Transaksi terbaru</h3>
+            <div id="recent"></div>
+          </div>
+        </div>
+        <div class="card" id="de" hidden></div>
+      </section>
+
+      <section id="v-tx" hidden>
+        <div class="fl noprint cols-auto-170"><input type="search"
+            id="fq" aria-label="Cari transaksi" aria-keyshortcuts="Control+K Meta+K"
+            placeholder="Cari deskripsi (Ctrl+K)" autocomplete="off"><input type="date" id="f1"
+            aria-label="Dari tanggal"><select id="f2" aria-label="Kategori"></select><input type="text"
+            inputmode="numeric" data-cur autocomplete="off" id="f3" placeholder="Jumlah minimal (Rp)"
+            aria-label="Jumlah minimal"></div>
+        <div class="rw noprint" id="bar2"><small id="sc" aria-live="polite"></small><button class="bt s danger"
+            id="bulk" hidden>Hapus yang Dipilih (<span id="bcnt">0</span>)</button></div>
+        <table class="tbl">
+          <caption class="sr-only">Riwayat transaksi, dapat difilter berdasarkan tanggal, kategori, atau jumlah
+          </caption>
+          <thead>
+            <tr>
+              <th scope="col"><input type="checkbox" id="selall" aria-label="Pilih semua transaksi"></th>
+              <th scope="col">Tanggal</th>
+              <th scope="col">Deskripsi</th>
+              <th scope="col">Kategori</th>
+              <th class="ta-right" scope="col">Jumlah</th>
+              <th scope="col"><span class="sr-only">Aksi</span></th>
+            </tr>
+          </thead>
+          <tbody id="tb"></tbody>
+        </table>
+      </section>
+
+      <section id="v-bud" hidden>
+        <div class="grid gb" id="bl"></div>
+        <div class="card">
+          <h3 class="ct">Kategori kustom</h3>
+          <div class="fl"><select id="ct" aria-label="Jenis kategori">
+              <option value="out">Pengeluaran</option>
+              <option value="in">Pemasukan</option>
+            </select><input id="cn" aria-label="Nama kategori baru" maxlength="24"
+              placeholder="Nama kategori baru"><button class="bt" id="ca">Tambah kategori</button></div>
+          <div id="cl"></div>
+        </div>
+      </section>
+      <section id="v-goal" hidden>
+        <div class="card mb-16">
+          <div class="fl m-0"><input id="gn" aria-label="Nama tujuan keuangan" maxlength="30"
+              placeholder="Nama tujuan, mis. Dana Pendidikan"><input id="gt" aria-label="Target tabungan dalam rupiah"
+              type="text" inputmode="numeric" data-cur autocomplete="off" placeholder="Target (Rp)"><button class="bt"
+              id="ga">Tambah tujuan</button></div>
+        </div>
+        <div class="grid gg" id="gl"></div>
+      </section>
+
+      <section id="v-bill" hidden><label class="rw jc-start mb-14"><input
+            type="checkbox" id="em2"> Kirim pengingat tagihan ke email saya (7 hari sebelum jatuh tempo)</label>
+        <div class="card mb-16">
+          <div class="fl m-0"><input id="bn" aria-label="Nama tagihan" maxlength="30"
+              placeholder="Nama tagihan, mis. Listrik"><input id="bm" aria-label="Jumlah tagihan dalam rupiah"
+              type="text" inputmode="numeric" data-cur autocomplete="off" placeholder="Jumlah (Rp)"><input id="bd" aria-label="Tanggal jatuh tempo" type="date"><label class="opt"><input type="checkbox" id="br" checked><span><b>Ulangi tiap bulan</b></span></label><select id="bcat" aria-label="Kategori"></select><button
+              class="bt" id="ba">Tambah tagihan</button></div>
+        </div>
+        <div class="grid gg" id="bk"></div>
+      </section>
+
+      <section id="v-rep" hidden>
+        <div class="rw noprint mb-14">
+          <div class="rw"><button class="bt s" id="r6">Bulanan</button><button class="bt s g" id="r12">Tahunan</button>
+          </div>
+          <div class="rw"><button class="bt s g" id="csvb">Ekspor Excel (CSV)</button><button class="bt s g" data-act="print">Ekspor PDF</button></div>
+        </div>
+        <div class="grid g3" id="rs"></div>
+        <div id="rcharts">
+        <div class="card">
+          <h3 class="ct">Pemasukan dan pengeluaran (juta Rp)</h3>
+          <div class="cv h-300"><canvas id="bar" role="img"
+              aria-label="Grafik batang pemasukan dan pengeluaran per bulan"></canvas></div>
+        </div>
+        <div class="grid gb mt-16">
+          <div class="card">
+            <h3 class="ct">Saldo akhir bulan (juta Rp)</h3>
+            <div class="cv"><canvas id="bal2" role="img" aria-label="Grafik garis saldo akhir per bulan"></canvas></div>
+          </div>
+          <div class="card">
+            <h3 class="ct">Pengeluaran per kategori (juta Rp)</h3>
+            <div class="cv"><canvas id="rcat" role="img"
+                aria-label="Grafik batang bertumpuk pengeluaran per kategori per bulan"></canvas></div>
+          </div>
+        </div>
+        </div>
+        <div class="card" id="rempty" hidden></div>
+        <div class="card noprint mt-16">
+          <h3 class="ct">Cadangan data</h3><small>Simpan salinan data ke perangkat ini, atau pulihkan dari berkas
+            cadangan (.json).</small>
+          <div class="rw mt-12"><button class="bt" id="bkp"><i data-i="dl"></i> Cadangkan
+              Data</button><button class="bt g" id="rsb"><i data-i="up"></i> Pulihkan Data</button></div>
+          <div class="rw mt-8"><button class="bt s g" id="bkc">Unduh CSV</button><button
+              class="bt s g" id="bkf">Unduh PDF</button></div><input type="file" id="rsf"
+            accept=".json,application/json" hidden>
+        </div>
+        <div class="card mt-16">
+          <div class="rw">
+            <div>
+              <h3 class="ct m-0">Zona berbahaya</h3><small>Menghapus seluruh transaksi, anggaran, tujuan,
+                tagihan, dan saldo.</small>
+            </div><button class="bt s danger" id="rst">Reset Semua Data</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="v-debt" hidden>
+        <div class="grid g3" id="dbs"></div>
+        <div class="rw noprint mb-14"><div class="rw" id="dbtab" role="tablist" aria-label="Jenis catatan"></div><button class="bt" id="dbadd">Tambah</button></div>
+        <div class="grid gg" id="dbl"></div>
+      </section>
+
+      <section id="v-amal" hidden>
+        <div class="card mb-14" id="chh"></div>
+        <div class="grid g2 mb-14" id="chs"></div>
+        <h3 class="ct mb-10">Riwayat sedekah</h3>
+        <div class="rw jc-start noprint mb-14" id="chtab" role="group" aria-label="Filter riwayat"></div>
+        <div class="grid gg" id="chl"></div>
+      </section>
+
+      <section id="v-auto" hidden>
+        <div class="card mb-16">
+          <div class="rw mb-10"><div><h3 class="ct m-0">Template transaksi</h3><small>Tombol cepat di Ringkasan dan di form tambah transaksi.</small></div><button class="bt s" id="tma">Tambah template</button></div>
+          <div id="tml"></div>
+        </div>
+        <div class="card mb-16">
+          <div class="rw mb-10"><div><h3 class="ct m-0">Aturan kategori otomatis</h3><small>Jika deskripsi memuat kata kunci, kategori terisi sendiri. Aturan yang sama dipakai saat impor mutasi bank.</small></div><button class="bt s g" id="rlp">Pasang aturan umum</button></div>
+          <div class="fl cols-auto-170 m-0"><input id="rlk" aria-label="Kata kunci" maxlength="80" placeholder="Kata kunci, mis. indomaret"><select id="rlc" aria-label="Kategori"></select><button class="bt" id="rla">Tambah aturan</button></div>
+          <small class="mt-8">Pisahkan beberapa kata kunci dengan koma. Kata kunci terpanjang yang cocok akan dipakai.</small>
+          <div id="rll"></div>
+        </div>
+        <div class="card">
+          <h3 class="ct">Impor mutasi bank (CSV)</h3><small>Unduh mutasi dari m-banking atau internet banking sebagai CSV, lalu pilih di sini. Kolom dikenali otomatis dan Anda bisa meninjaunya dulu sebelum disimpan.</small>
+          <div class="fl cols-auto-170 mt-12 m-0"><select id="imw" aria-label="Dompet tujuan"></select><button class="bt" id="imb">Pilih berkas CSV</button></div>
+          <input type="file" id="imf" accept=".csv,.txt,text/csv,text/plain" hidden>
+        </div>
+      </section>
+
+      <section id="v-sp" hidden>
+        <div class="card sphd">
+          <div class="avs" id="spav"></div>
+          <div class="spt">
+            <h3 id="spht"></h3><small id="sphs"></small>
+          </div><button class="bt" id="spinv" hidden>Undang</button><button class="bt s g" id="spend" hidden>Keluar
+            dari ruang</button>
+        </div>
+        <div class="card mb-16" id="spnone" hidden>
+          <h3 class="ct">Mulai Ruang Bersama</h3>
+          <small>Satu ruang per akun, maksimal 4 anggota. Undang pasangan atau keluarga dengan kode sekali pakai.</small>
+          <div class="fl cols-auto-170 mt-12 m-0"><input id="spn" maxlength="40" aria-label="Nama ruang" placeholder="Nama ruang, mis. Rumah Kita"><input id="spd" maxlength="30" aria-label="Nama tampilan Anda" placeholder="Nama tampilan Anda"><button class="bt" id="spc">Buat ruang</button></div>
+          <div class="mt-16"><b>Punya kode undangan?</b><div class="fl cols-auto-170 mt-8 m-0"><input id="spj" maxlength="12" autocomplete="off" aria-label="Kode undangan" placeholder="Kode undangan"><button class="bt g" id="spjb">Gabung</button></div></div>
+        </div>
+        <div id="spmain" hidden>
+          <div class="card mb-16" id="spk"></div>
+          <div class="rw mb-10">
+            <h3 class="ct m-0">Target tabungan bersama</h3><button class="bt s g" id="spadd">Tambah
+              target</button>
+          </div>
+          <div class="grid gb" id="spg"></div>
+          <div class="card">
+            <h3 class="ct">Riwayat bersama</h3><small class="m-neg8-0-8">Warna avatar menunjukkan siapa yang mencatat</small>
+            <div id="spl"></div>
+          </div>
+        </div>
+      </section>
+    </main>
+    <button class="fab" id="fab" aria-label="Tambah transaksi"><i data-i="plus"></i><em>Tambah transaksi</em></button>
+    <dialog id="m" aria-label="Tambah transaksi">
+      <form id="tf">
+        <h3 class="ct">Tambah transaksi</h3><div class="tpc" id="tpc" role="group" aria-label="Template cepat" hidden></div><select id="ty" aria-label="Jenis transaksi">
+          <option value="out">Pengeluaran</option>
+          <option value="in">Pemasukan</option>
+        </select><select id="wsel" aria-label="Dompet asal"></select>
+        <input id="a" aria-label="Jumlah dalam rupiah" type="text" inputmode="numeric" data-cur autocomplete="off"
+          required placeholder="Jumlah (Rp)"><select id="c" aria-label="Kategori"></select><input id="d"
+          aria-label="Deskripsi transaksi" required placeholder="Deskripsi, misalnya makan siang"><small id="ach" aria-live="polite" hidden></small><input id="dt"
+          aria-label="Tanggal transaksi" type="date">
+        <fieldset class="scope" id="scf">
+          <legend>Dicatat sebagai</legend>
+          <div class="pills"><label class="pill"><input type="radio" name="sc" value="p"
+                checked><span>Pribadi</span></label><label class="pill"><input type="radio" name="sc"
+                value="b"><span>Bersama</span></label></div><small>Semua catatan tetap terlihat di laporan. Pilihan
+            Bersama juga tampil di Ruang Bersama.</small>
+        </fieldset>
+        <div class="rw"><button type="button" class="bt g" data-close="m">Batal</button><button class="bt">Simpan
+            transaksi</button></div>
+      </form>
+    </dialog>
+    <dialog id="iv" aria-labelledby="ivt">
+      <div class="ivb">
+        <h3 id="ivt">Pindai untuk Bergabung</h3>
+        <div class="qrw">
+          <div id="ivq" role="img" aria-label="QR Code tautan undangan"></div>
+        </div><input id="ivl" readonly autocomplete="off" aria-label="Tautan undangan">
+        <div class="rw"><button type="button" class="bt g" id="ivx">Tutup</button><button type="button" class="bt"
+            id="ivc" autofocus>Salin Tautan</button></div><small>Kode: <b id="ivcd"></b>. Berlaku 7 hari dan hanya bisa dipakai satu kali, jadi kirim hanya ke orang yang Anda percaya.</small>
+      </div>
+    </dialog>
+    <dialog id="lnd" aria-labelledby="lnt"><h3 class="ct" id="lnt">Hubungkan akun</h3><div id="lnl"></div><small class="m-8">Mirai hanya meminta izin baca saldo lewat Open Banking (OAuth 2.0). Kata sandi bank tidak pernah melewati Mirai.</small></dialog>
+    <dialog id="ps" aria-labelledby="psn">
+      <div class="psh"><span class="avl" id="psa">A</span><div><b id="psn"></b><small id="pse"></small></div><button type="button" class="ib" id="psx" aria-label="Tutup"><i data-i="x"></i></button></div>
+      <div id="psm">
+        <button type="button" class="mi" id="bell" aria-expanded="false"><i data-i="bell"></i><span><b>Notifikasi</b><small>Pengingat dan peringatan anggaran</small></span><span class="bdg" id="bc" hidden></span></button>
+        <button type="button" class="mi" id="pset"><i data-i="gear"></i><span><b>Setelan</b><small>Profil, privasi, notifikasi</small></span></button>
+        <button type="button" class="mi" id="th"></button>
+        <button type="button" class="mi" id="inst" hidden><i data-i="dl"></i><span><b>Pasang aplikasi</b><small>Tambahkan ke layar utama HP</small></span></button>
+        <button type="button" class="mi dg" id="pout" data-act="logout"><i data-i="logout"></i><span><b>Keluar</b></span></button>
+      </div>
+    </dialog>
+    <dialog id="sd" aria-labelledby="sdt">
+      <form id="sdf">
+        <h3 class="ct" id="sdt">Setelan</h3>
+        <div id="upd" hidden><b>Pembaruan aplikasi</b><small id="updm" role="status" aria-live="polite">Versi baru Mirai sudah siap. Perbarui agar fitur dan perbaikan terbaru terpakai.</small><div class="rw jc-start mt-8"><button type="button" class="bt s" id="updb">Update Aplikasi</button></div></div>
+        <div><label class="lb" for="sdn">Nama lengkap</label><input id="sdn" maxlength="40" autocomplete="name"></div>
+        <label class="opt"><input type="checkbox" id="sdp"><span><b>Mode Privasi Otomatis</b><small>Nominal saldo diburamkan saat aplikasi dibuka. Ketuk atau usap angka untuk menampilkannya sementara.</small></span></label>
+        <label class="opt"><input type="checkbox" id="sdq"><span><b>Notifikasi push tagihan</b><small>Pengingat 7 hari sebelum jatuh tempo di perangkat ini.</small></span></label>
+        <div><b>Kunci aplikasi</b><small>Diminta setiap aplikasi dibuka atau kembali dari latar belakang. Berlaku hanya di perangkat ini.</small><div class="rw jc-start mt-8"><button type="button" class="bt s g" id="sdbio"></button><button type="button" class="bt s g" id="sdpin"></button></div></div>
+        <div><b>Keamanan dan privasi</b><small>Kelola akses akun dan data pribadi Anda.</small><div class="d-grid gap-10 mt-8"><button type="button" class="bt s g" data-act="sec-rc">Kode pemulihan 2FA</button><button type="button" class="bt s g" data-act="sec-dev">Perangkat aktif dan keluar dari semua perangkat</button><button type="button" class="bt s g" data-act="sec-snap">Riwayat cadangan otomatis</button><button type="button" class="bt s g" data-act="sec-export">Unduh semua data saya</button><button type="button" class="bt s danger" data-act="sec-del">Hapus akun</button></div></div>
+        <div class="rw"><button type="button" class="bt g" data-close="sd">Tutup</button><button class="bt">Simpan nama</button></div>
+      </form>
+    </dialog>
+    <dialog id="mo" aria-labelledby="mot">
+      <h3 class="ct" id="mot">Menu lainnya</h3>
+      <div id="mol"></div>
+    </dialog>
+    <dialog id="cd" aria-labelledby="cdt" aria-describedby="cdm">
+      <h3 class="ct" id="cdt">Konfirmasi</h3>
+      <p id="cdm"></p>
+      <div class="rw"><button type="button" class="bt g" id="cdn">Batal</button><button type="button" class="bt danger"
+          id="cdy">Ya</button></div>
+    </dialog>
+    <dialog id="xd" aria-label="Transfer antar dompet">
+      <form id="xf">
+        <h3 class="ct">Transfer antar dompet</h3><select id="xa" aria-label="Dari dompet"></select><select id="xb"
+          aria-label="Ke dompet"></select><input id="xm" aria-label="Jumlah transfer dalam rupiah" type="text"
+          inputmode="numeric" data-cur autocomplete="off" required placeholder="Jumlah (Rp)">
+        <div class="err" id="xe"></div>
+        <div class="rw"><button type="button" class="bt g" data-close="xd">Batal</button><button
+            class="bt">Transfer</button></div>
+      </form>
+    </dialog>
+  </div>
+  <div id="bnr" aria-live="polite"></div>
+  <div id="toasts" role="status" aria-live="polite" popover="manual"></div>
+  <div id="off" role="status" hidden>Koneksi terputus. Mode baca-saja aktif.</div>
+  <div id="lk" role="alertdialog" aria-modal="true" aria-labelledby="lkt" aria-describedby="lkd" hidden>
+    <form class="card" id="lkf">
+      <img src="img/logo-160.webp" alt="" class="brand-logo login-logo" width="44" height="44">
+      <h3 class="ct" id="lkt">Aplikasi terkunci</h3>
+      <p id="lkd">Tidak ada aktivitas selama 5 menit, jadi layar dikunci untuk melindungi data Anda. Masukkan kata sandi
+        untuk melanjutkan.</p><div id="lkb" hidden><button type="button" class="bt" id="lkbio" hidden></button><div id="lkpin" hidden><div class="pdots" id="pdots" aria-label="PIN"></div><div class="ppad" id="ppad"></div></div><button type="button" class="bt g" id="lkw">Gunakan kata sandi akun</button></div><input id="lkp" type="password" aria-label="Kata sandi" autocomplete="current-password">
+      <div class="err" id="lke"></div><button class="bt" id="lku">Buka Kunci</button><button type="button" class="bt g"
+        id="lko">Kembali ke Login</button>
+    </form>
+  </div>
+  <dialog id="pd" aria-labelledby="pt">
+    <form id="pf">
+      <h3 class="ct" id="pt"></h3>
+      <div id="pg0"><label class="lb" id="pl0" for="p0"></label><input id="p0" autocomplete="off"></div>
+      <div id="pg1"><label class="lb" id="pl1" for="p1"></label><input id="p1" autocomplete="off"></div>
+      <div class="rw"><button type="button" class="bt g" data-close="pd">Batal</button><button
+          class="bt">Simpan</button></div>
+    </form>
+  </dialog>
+  <footer class="foot">
+    <address><strong>Mirai Management</strong><span>Jl. Kelapa Dua No. 26, Jakarta Utara 14120, Indonesia</span><a
+        href="tel:+62895367307799">+62 895-3673-07799</a><a
+        href="mailto:miraimanagement8@gmail.com">miraimanagement8@gmail.com</a></address><small><a href="syarat.html">Syarat &amp; Ketentuan</a> &middot; <a href="privasi.html">Kebijakan Privasi</a></small><small>&copy; 2026 Mirai
+      Management. Seluruh hak cipta dilindungi.</small>
+  </footer>
+  <script src="splash.js"></script>
+</body>
+
+</html>

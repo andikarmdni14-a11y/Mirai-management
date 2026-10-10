@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<!-- TEMPLAT: dokumen ini disusun sesuai praktik data aplikasi pada versi 2026-10. Alamat/email kontak sudah diisi (v26). Tinjau dengan penasihat hukum sebelum rilis publik. Ubah TOS_VER di config.js bila isi diubah. -->
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kebijakan Privasi | Mirai Management</title>
+<meta name="description" content="Bagaimana Mirai Management memproses data pribadi Anda sesuai UU PDP.">
+<meta name="theme-color" content="#FAFAFA">
+<link rel="icon" href="icons/favicon-48.png" type="image/png" sizes="48x48">
+<link rel="manifest" href="manifest.json">
+<link rel="stylesheet" href="legal.css">
+<script src="theme-init.js"></script>
+</head>
+<body>
+<div class="wrap">
+<header><a class="b" href="./"><img src="icons/icon-192.png" width="36" height="36" alt="">Mirai Management</a><nav aria-label="Dokumen hukum"><a href="syarat.html">Syarat</a><a href="privasi.html">Privasi</a></nav></header>
+<main>
+<h1>Kebijakan Privasi</h1>
+<p class="meta">Versi 2026-10. Berlaku sejak 9 Oktober 2026. Disusun dengan mengacu pada Undang-Undang No. 27 Tahun 2022 tentang Pelindungan Data Pribadi (UU PDP).</p>
+<p>Halaman ini menjelaskan data apa yang Mirai Management ("kami") proses, untuk apa, dengan siapa dibagikan, berapa lama disimpan, dan bagaimana Anda mengendalikannya. Kami berusaha menyimpan sesedikit mungkin.</p>
+
+<h2>1. Pengendali data</h2>
+<p>Mirai Management, Jl. Kelapa Dua No. 26, Jakarta Utara 14120, Indonesia. Kontak pelindungan data: <a href="mailto:miraimanagement8@gmail.com">miraimanagement8@gmail.com</a>.</p>
+
+<h2>2. Data yang kami proses</h2>
+<table>
+<thead><tr><th>Data</th><th>Isi</th><th>Tujuan</th></tr></thead>
+<tbody>
+<tr><td>Akun</td><td>Email, nama (opsional), sidik kata sandi yang dikelola Supabase Auth (kami tidak melihat kata sandi Anda), penyedia masuk (email atau Google), versi dan waktu persetujuan Syarat/Privasi</td><td>Membuat dan mengamankan akun, bukti persetujuan</td></tr>
+<tr><td>Data keuangan</td><td>Transaksi, dompet, anggaran, tujuan, tagihan, utang dan piutang, cicilan, template, aturan kategori, pengaturan. Disimpan sebagai satu dokumen per pengguna</td><td>Inti layanan: menampilkan dan menyinkronkan catatan Anda</td></tr>
+<tr><td>Keamanan perangkat</td><td>Label browser dan sistem operasi, IP yang disamarkan (blok terakhir dihilangkan), perkiraan kota dan negara dari IP, waktu pertama dan terakhir aktif, penanda perangkat acak</td><td>Menampilkan Perangkat aktif, mengeluarkan perangkat, email pemberitahuan login baru</td></tr>
+<tr><td>Kode pemulihan 2FA</td><td>Hanya hasil hash (HMAC) dari kode, bukan kode aslinya; jumlah percobaan salah</td><td>Pemulihan akses bila HP hilang, pencegahan tebak-tebakan</td></tr>
+<tr><td>Ruang Bersama</td><td>Nama ruang dan nama tampilan, pengeluaran dan setoran yang Anda tandai Bersama, target bersama, kode undangan</td><td>Berbagi dengan anggota yang Anda undang</td></tr>
+<tr><td>Notifikasi</td><td>Langganan push perangkat; email Anda bila pengingat email diaktifkan</td><td>Pengingat tagihan, cicilan, dan utang</td></tr>
+<tr><td>Akun terhubung (opsional)</td><td>Token akses ke bank/e-wallet pilihan Anda (disimpan terenkripsi AES-256-GCM, tidak pernah dikirim ke browser), saldo terakhir</td><td>Menampilkan saldo; hanya izin baca</td></tr>
+<tr><td>Galat teknis (bila diaktifkan)</td><td>Pesan galat dan jejak tumpukan dari Sentry, tanpa data pribadi, tanpa isi catatan keuangan, tanpa riwayat klik</td><td>Memperbaiki bug</td></tr>
+<tr><td>Analitik (bila diaktifkan)</td><td>Google Analytics 4, hanya jika pemilik layanan mengisi ID-nya; tidak membaca isi catatan keuangan</td><td>Memahami pemakaian umum</td></tr>
+</tbody></table>
+<p>Kami <b>tidak</b> menjual data Anda, tidak memakai data keuangan Anda untuk iklan, dan tidak membuat profil untuk pihak lain.</p>
+
+<h2>3. Dasar pemrosesan</h2>
+<p>Persetujuan Anda (saat mendaftar atau menyetujui ulang), pelaksanaan layanan yang Anda minta, dan kepentingan yang sah untuk menjaga keamanan akun dan mencegah penyalahgunaan.</p>
+
+<h2>4. Pihak yang memproses atas nama kami</h2>
+<ul>
+<li><b>Supabase</b>: basis data dan autentikasi.</li>
+<li><b>Vercel</b>: hosting aplikasi dan fungsi server (mis. kode pemulihan, perangkat, pengingat).</li>
+<li><b>Resend</b>: pengiriman email (kode verifikasi, pengingat, pemberitahuan keamanan).</li>
+<li><b>Google</b>: bila Anda masuk dengan Google, dan untuk analitik bila diaktifkan.</li>
+<li><b>Sentry</b>: pemantauan galat, bila diaktifkan.</li>
+<li><b>Penyedia bank/e-wallet</b>: hanya bila Anda menghubungkannya sendiri.</li>
+<li><b>CDN pustaka</b> (jsDelivr, cdnjs): memuat pustaka seperti Supabase SDK dan Font Awesome; mereka menerima alamat IP dan informasi browser Anda saat memuat berkas.</li>
+</ul>
+<p>Penyedia tersebut dapat memproses data di luar Indonesia. Kami memilih penyedia yang menerapkan perlindungan memadai dan mengikat mereka lewat ketentuan layanan masing-masing. Data tidak dibagikan kepada pihak lain kecuali diwajibkan hukum.</p>
+
+<h2>5. Penyimpanan di perangkat Anda</h2>
+<p>Aplikasi menyimpan di browser (localStorage, sessionStorage, cache): salinan data agar bisa dipakai offline, perubahan yang belum terkirim, pengaturan tampilan, pengaturan kunci aplikasi (PIN disimpan sebagai hash), dan penanda perangkat. Keluar dari akun menghapus salinan data akun itu dari perangkat.</p>
+
+<h2>6. Berapa lama data disimpan</h2>
+<ul>
+<li>Data keuangan: selama akun aktif.</li>
+<li>Salinan otomatis di server: hingga 40 salinan terbaru, yang lebih lama dihapus otomatis.</li>
+<li>Data perangkat: selama akun aktif; perangkat yang dikeluarkan tetap tercatat sampai akun dihapus.</li>
+<li>Kode pemulihan: sampai Anda membuat kode baru atau memakainya untuk mereset 2FA.</li>
+<li><b>Setelah Anda menghapus akun</b>: seluruh data di atas dihapus dari basis data produksi saat itu juga. Salinan cadangan infrastruktur milik penyedia (mis. Supabase) dapat bertahan sesuai masa retensi mereka sebelum terhapus total, dan log pengiriman email dapat tersimpan di penyedia email sesuai kebijakannya.</li>
+</ul>
+
+<h2>7. Keamanan</h2>
+<p>Koneksi memakai HTTPS. Akses basis data dibatasi per pengguna (Row Level Security) dan hanya untuk sesi yang lolos 2FA dan belum dikeluarkan. Token akun terhubung terenkripsi. Percobaan kode pemulihan dibatasi. Tidak ada sistem yang aman mutlak. Jika terjadi kegagalan pelindungan data pribadi yang berdampak pada Anda, kami akan memberi tahu Anda dan pihak berwenang sesuai batas waktu yang ditetapkan UU PDP.</p>
+
+<h2>8. Hak Anda</h2>
+<p>Menurut UU PDP Anda berhak: mendapatkan informasi dan <b>salinan</b> data Anda; <b>memperbaiki</b> data; <b>menghapus</b> data atau mengakhiri pemrosesan; <b>menarik persetujuan</b>; menyatakan keberatan atau meminta pembatasan pemrosesan; dan memindahkan data (portabilitas). Cara termudah:</p>
+<ul>
+<li><b>Salinan dan portabilitas</b>: Setelan, <i>Unduh semua data saya</i> (berkas JSON). Laporan juga bisa diekspor ke CSV/PDF.</li>
+<li><b>Perbaikan</b>: ubah langsung di aplikasi.</li>
+<li><b>Penghapusan dan penarikan persetujuan</b>: Setelan, <i>Hapus akun</i>.</li>
+<li>Hal lain, atau bila Anda tidak puas dengan tanggapan kami: email ke kontak di atas. Anda juga berhak mengadu kepada lembaga pelindungan data pribadi yang berwenang.</li>
+</ul>
+
+<h2>9. Anak</h2>
+<p>Mirai ditujukan untuk pengguna berusia 18 tahun ke atas. Jika kami mengetahui ada akun milik anak di bawah umur tanpa persetujuan orang tua/wali, kami akan menghapusnya.</p>
+
+<h2>10. Perubahan kebijakan</h2>
+<p>Jika kebijakan ini berubah secara material, nomor versi diganti dan Anda diminta menyetujui ulang saat membuka aplikasi.</p>
+</main>
+<footer>Mirai Management, Jl. Kelapa Dua No. 26, Jakarta Utara 14120, Indonesia. Pertanyaan: <a href="mailto:miraimanagement8@gmail.com">miraimanagement8@gmail.com</a>. Lihat juga <a href="syarat.html">Syarat &amp; Ketentuan</a>.</footer>
+</div>
+</body>
+</html>

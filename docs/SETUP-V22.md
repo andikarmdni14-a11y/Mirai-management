@@ -13,7 +13,7 @@ Urutan penting. Bagian **"Belum teruji"** di akhir menjelaskan apa yang tidak bi
 | `RECOVERY_SECRET` | **Baru, wajib.** String acak panjang (`openssl rand -base64 48`). Kunci HMAC kode pemulihan. Jangan diubah setelah ada pengguna membuat kode: mengubahnya membatalkan semua kode. |
 | `APP_URL` | Alamat aplikasi, mis. `https://mirai-management.vercel.app` (dipakai di email). |
 | `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY` | Sudah ada sejak v19/v20. Dipakai API baru (`api/recovery`, `api/account`). Jangan pernah dimasukkan ke browser. |
-| `RESEND_API_KEY`, `FROM_EMAIL` | Sudah ada. Dipakai untuk email login baru, kode pemulihan dipakai, akun dihapus, dan pengingat. Tanpa keduanya fitur tetap jalan, hanya tanpa email. |
+| `RESEND_API_KEY`, `FROM_EMAIL` | **Sejak v23 WAJIB** (sebelumnya opsional): kode verifikasi login dikirim lewat email ini. Tanpa keduanya `/api/twofa/send` membalas 503 dan pengguna tidak bisa masuk (kecuali yang memakai Aplikasi Autentikator lewat "Coba cara lain"). Juga dipakai untuk email login baru, kode pemulihan dipakai, akun dihapus, pengingat, dan pemberitahuan Autentikator dimatikan. |
 
 Deploy. Fungsi baru: `/api/recovery/{status,generate,use}` dan `/api/account/{device,devices,revoke,logout-all,delete}` (total 4 fungsi, jauh di bawah batas paket Hobby).
 
@@ -58,3 +58,21 @@ Saya menguji logika di Node dan alur di Chromium dengan Supabase tiruan (lihat `
 5. **Pemasangan di HP asli** (Android dan iOS), pintasan ikon, dan WebAPK. Pengujian saya memakai pemeriksaan instalasi Chromium (`Page.getInstallabilityErrors`) dan peluncuran offline, bukan perangkat nyata.
 6. **Sentry** dan notifikasi push untuk pengingat cicilan/utang (kode cron diperluas tetapi tidak dijalankan).
 7. **Admin API hapus akun** dan seluruh cascade pada data produksi sungguhan.
+
+## v23 — 2FA kode email, Aplikasi Autentikator opsional, pembaruan tampilan
+**Wajib dijalankan sebelum rilis (urutan penting):**
+1. Jalankan **bagian v23** di akhir `schema.sql` (dari komentar `-- v23`) di SQL Editor. Aman dijalankan ulang. Membuat tabel `email_otps`, `session_2fa`; fungsi `email_otp_issue`, `email_otp_check`, `email_2fa_ok`; dan **mengganti `authed()`** supaya menerima sesi yang lolos lewat kode email (selain `aal2`). Semua policy dan RPC memakai `authed()`, jadi tidak ada yang perlu diubah lagi.
+   Periksa: `select proname from pg_proc where proname in ('email_otp_issue','email_otp_check','email_2fa_ok');` mengembalikan 3 baris.
+2. Pastikan `RESEND_API_KEY`, `FROM_EMAIL`, dan `RECOVERY_SECRET` terisi di Vercel (lihat tabel di atas). Kode login memakai `RECOVERY_SECRET` untuk HMAC; tidak ada variabel baru.
+3. Deploy. Versi cache service worker naik ke `mirai-v27`; pengguna terpasang melihat tombol "Update Aplikasi".
+
+**Cara kerjanya.** Setelah kata sandi benar, server (`api/twofa/send`) mengirim kode 6 digit ke email akun. Kode berlaku 10 menit, hanya disimpan sebagai HMAC, maksimal 5 tebakan per kode, kirim ulang paling cepat tiap 30 detik dan 6 kali per jam (dijaga di database, tahan permintaan paralel). Kode benar (`api/twofa/verify`) mencatat `session_id` di `session_2fa`; sesi itu lalu diakui setara `aal2` oleh RLS dan API. Pengguna yang mengaktifkan **Aplikasi Autentikator** (Setelan > Keamanan, bawaan Off) bisa memakainya lewat "Coba cara lain"; statusnya = ada tidaknya faktor TOTP terverifikasi di Supabase. Pengguna lama yang sudah punya autentikator otomatis tampil On.
+
+**Perlu Anda ketahui (keputusan rancangan):**
+- Kode email tetap bisa dipakai walau Autentikator On (Autentikator hanya cara alternatif). Jadi Autentikator tidak menambah perlindungan terhadap orang yang menguasai email Anda. Bila ingin menjadikannya benar-benar "ekstra", wajibkan Autentikator saat On (ubah `after()` di `login.js`, dan tolak `twofa/send` di server bila pengguna punya faktor TOTP).
+- Kode email lebih lemah daripada TOTP karena "Lupa kata sandi" juga lewat email. Mitigasi: batas tebakan dan kirim, kode sekali pakai, email pemberitahuan login baru yang sudah ada.
+- SMS **belum** tersedia: butuh penyedia SMS berbayar (mis. Twilio lewat MFA Telepon Supabase) dan layar pendaftaran nomor. Daftar di "Coba cara lain" dibuat dinamis (`openAlt()` di `login.js`), jadi menambah metode tinggal satu entri.
+- Setelah daftar baru, pengguna menerima dua kode berurutan (verifikasi email pendaftaran, lalu kode 2FA). Bisa dilebur nanti.
+- Status "sudah lolos 2FA" disimpan di `session_2fa` per sesi dan dibersihkan setelah setahun. Memilih "Keluar dari semua perangkat" tetap mematikan akses lewat `user_devices.revoked_at`.
+
+**Yang belum teruji di luar proyek Anda:** SQL v23 (dijalankan di Postgres sungguhan), pengiriman email Resend ke Gmail/Outlook, dan perilaku `aal` pada JWT setelah autentikator dilepas (server mencatat sesi aktif ke `session_2fa` sebagai pengaman). Uji manual: (a) login akun baru tanpa autentikator, (b) nyalakan lalu matikan Autentikator, (c) login dengan "Coba cara lain" > Autentikator, (d) 6 kode salah berturut-turut terkunci, (e) mode offline setelah login tetap terbuka.

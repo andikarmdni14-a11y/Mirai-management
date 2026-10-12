@@ -78,7 +78,7 @@ test('keamanan: persetujuan Syarat/Privasi wajib untuk akun yang belum menyetuju
 });
 
 test('keamanan: kode pemulihan 2FA ditawarkan saat belum ada, dan kode tampil sekali', async ({ browser }) => {
-  srv.be.seed(UID, BASE()); srv.be.rc = 0; const d = await device(browser, srv); await d.open('/');
+  srv.be.seed(UID, BASE()); srv.be.rc = 0; const d = await device(browser, srv); await d.ctx.addInitScript(() => localStorage.setItem('mm_fake_totp', '1')); await d.open('/');   // kode pemulihan hanya ditawarkan ke pengguna Aplikasi Autentikator
   await d.page.waitForFunction(() => document.getElementById('rcd') && document.getElementById('rcd').open);
   await d.page.click('#rcn'); await d.page.waitForSelector('.rcg code'); expect(await d.page.locator('.rcg code').count()).toBe(10);
   expect(await d.page.isDisabled('#rcl')).toBeTruthy(); await d.page.check('#rck'); expect(await d.page.isDisabled('#rcl')).toBeFalsy(); srv.be.rc = 10; await d.ctx.close();

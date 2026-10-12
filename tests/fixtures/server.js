@@ -5,7 +5,7 @@ const http = require('http'), fs = require('fs'), path = require('path');
 const ROOT = path.resolve(__dirname, '..', '..'), MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json; charset=utf-8', '.png': 'image/png', '.webp': 'image/webp', '.svg': 'image/svg+xml', '.xml': 'application/xml', '.txt': 'text/plain' };
 
 class Backend {
-  constructor() { this.rows = {}; this.history = []; this.tick = 0; this.revoked = new Set(); this.devices = {}; this.requests = 0; this.writes = 0; this.failWrites = 0; this.rc = 10; this.tables = {}; this.seq = 0 }
+  constructor() { this.rows = {}; this.history = []; this.tick = 0; this.revoked = new Set(); this.devices = {}; this.requests = 0; this.writes = 0; this.failWrites = 0; this.rc = 10; this.tfa = { code: '123456', sent: 0, wrongs: 0, verified: new Set(), mailFail: false, offAt: 0 }; this.tables = {}; this.seq = 0 }
   stamp() { this.tick++; return new Date(Date.UTC(2026, 9, 9, 0, 0, 0, this.tick)).toISOString().replace('Z', '000+00:00') }
   uid(token) { return token && token.startsWith('tok-') ? token.slice(4) : null }
   seed(uid, data) { this.rows[uid] = { user_id: uid, data, updated_at: this.stamp() } }
@@ -54,6 +54,12 @@ function start(port) {
         if (!uid) return send(401, { error: 'Sesi tidak valid atau belum lolos 2FA' });
         if (u.pathname === '/api/account/device') { const rv = be.revoked.has(b.id); (be.devices[uid] ||= {})[b.id] = { label: 'Chrome di Linux', last_seen: new Date().toISOString(), first_seen: new Date().toISOString() }; return send(200, { revoked: rv, isNew: false }) }
         if (u.pathname === '/api/account/devices') return send(200, { devices: Object.entries(be.devices[uid] || {}).map(([id, v]) => ({ id, ...v, ip: '203.0.113.x', city: 'Jakarta', country: 'ID', current: id === u.searchParams.get('id') })) });
+        // v23: 2FA kode email (tiruan sederhana dari api/twofa; logika sungguhan diuji di tests/unit/twofa.test.js)
+        const tok = (req.headers.authorization || '').replace('Bearer ', '');
+        if (u.pathname === '/api/twofa/status') return send(200, { verified: be.tfa.verified.has(tok), method: be.tfa.verified.has(tok) ? 'email' : null });
+        if (u.pathname === '/api/twofa/send') { if (be.tfa.mailFail) return send(502, { error: 'Kode belum bisa dikirim. Coba lagi sebentar.' }); be.tfa.sent++; return send(200, { ok: true, wait: 30, ttl: 10 }) }
+        if (u.pathname === '/api/twofa/verify') { if (b.code === be.tfa.code) { be.tfa.verified.add(tok); return send(200, { ok: true }) } be.tfa.wrongs++; return send(400, { error: 'Kode salah. Sisa 4 percobaan.' }) }
+        if (u.pathname === '/api/twofa/totp-off') { be.tfa.offAt++; be.tfa.verified.add(tok); return send(200, { ok: true }) }
         if (u.pathname === '/api/recovery/status') return send(200, { remaining: be.rc });
         if (u.pathname === '/api/recovery/generate') { be.rc = 10; return send(200, { codes: Array.from({ length: 10 }, (_, i) => 'ABCDE-FGH' + String.fromCharCode(74 + i)) }) }
         return send(200, { ok: true });

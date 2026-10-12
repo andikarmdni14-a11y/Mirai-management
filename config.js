@@ -43,6 +43,13 @@ const hasAuthHint = () => {
   } catch (e) { return true }
 };
 
+// v23: penanda lokal bahwa sesi ini sudah lolos 2FA lewat kode email (id sesi = claim session_id pada JWT).
+// Hanya untuk kenyamanan dan mode offline (status 2FA tidak bisa ditanyakan ke server saat offline). Keputusan akses tetap di server: RLS dan api/*.
+const sidOf = jwt => { try { return JSON.parse(atob(jwt.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).session_id || '' } catch (e) { return '' } };
+const tfaMark = session => { try { if (session) localStorage.mm_tfa = sidOf(session.access_token) } catch (e) { } };
+const tfaKnown = session => { try { const x = session && sidOf(session.access_token); return !!x && localStorage.mm_tfa === x } catch (e) { return false } };
+const tfaClear = () => { try { localStorage.removeItem('mm_tfa') } catch (e) { } };
+
 // Analitik: hanya bila ID asli, dan baru dimuat setelah interaksi pertama atau 8 detik setelah halaman selesai dimuat.
 (() => {
   if (!/^G-[A-Z0-9]{6,}$/i.test(GA_ID) || /^G-X+$/i.test(GA_ID)) return;

@@ -68,9 +68,9 @@
 
   <!-- ===== OVERLAY (khusus desktop) ===== -->
   <aside class="overlay" aria-hidden="true">
-    <div class="ov ov-in"><h2>Halo, Teman!</h2><p>Belum punya akun? Daftar dan mulai catat keuanganmu bersama kami.</p>
+    <div class="ov ov-in"><h2>Halo, Teman!</h2><p>Kelola data keuangan Anda dan maksimalkan ROI dengan mudah.</p>
       <button type="button" class="btn outline" data-go="up" tabindex="-1">Daftar</button></div>
-    <div class="ov ov-up"><h2>Selamat datang kembali!</h2><p>Sudah punya akun? Masuk untuk melanjutkan pengelolaan keuanganmu.</p>
+    <div class="ov ov-up"><h2>Selamat datang kembali!</h2><p>Kelola data keuangan Anda dan maksimalkan ROI dengan mudah.</p>
       <button type="button" class="btn outline" data-go="in" tabindex="-1">Masuk</button></div>
   </aside>
 </main>
@@ -78,24 +78,38 @@
 <!-- ===== MODAL OTP ===== -->
 <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="m-title" hidden>
   <div class="modal-box">
-    <div class="m-ico"><i id="m-i" class="fa-regular fa-envelope"></i></div>
-    <h3 id="m-title">Verifikasi Email Anda</h3>
-    <p id="m-desc">Kami telah mengirimkan 6 digit kode ke email Anda.</p>
-    <div class="m-qr" id="m-qr" hidden></div>
-    <div class="otp" id="otp">
-      <input inputmode="numeric" maxlength="1" autocomplete="one-time-code" aria-label="Digit 1">
-      <input inputmode="numeric" maxlength="1" aria-label="Digit 2">
-      <input inputmode="numeric" maxlength="1" aria-label="Digit 3">
-      <input inputmode="numeric" maxlength="1" aria-label="Digit 4">
-      <input inputmode="numeric" maxlength="1" aria-label="Digit 5">
-      <input inputmode="numeric" maxlength="1" aria-label="Digit 6">
+    <button type="button" class="m-back" id="m-back" aria-label="Kembali" hidden><svg viewBox="0 0 20 20" width="20" height="20" aria-hidden="true" focusable="false"><path d="M16 10H4m0 0l5.5-5.5M4 10l5.5 5.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg></button>
+
+    <!-- Layar input kode (6 kotak, terkirim otomatis di kotak ke-6) -->
+    <div id="m-main">
+      <div class="m-ico"><i id="m-i" class="fa-regular fa-envelope" aria-hidden="true"></i></div>
+      <h3 id="m-title">Cek email Anda</h3>
+      <p id="m-desc">Kami telah mengirimkan 6 digit kode ke email Anda.</p>
+      <div class="otp" id="otp">
+        <input inputmode="numeric" maxlength="6" autocomplete="one-time-code" aria-label="Digit 1">
+        <input inputmode="numeric" maxlength="1" aria-label="Digit 2">
+        <input inputmode="numeric" maxlength="1" aria-label="Digit 3">
+        <input inputmode="numeric" maxlength="1" aria-label="Digit 4">
+        <input inputmode="numeric" maxlength="1" aria-label="Digit 5">
+        <input inputmode="numeric" maxlength="1" aria-label="Digit 6">
+      </div>
+      <label class="field" id="rc-field" hidden><i class="fa-solid fa-key lead"></i>
+        <input id="rc-in" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="14" placeholder="XXXXX-XXXXX" aria-label="Kode pemulihan"></label>
+      <p class="m-msg" id="m-msg" role="status"></p>
+      <button type="button" class="btn primary" id="verify" data-label="Verifikasi">Verifikasi</button>
+      <p class="resend" id="rc-row" hidden><button type="button" class="link" id="rc-link">Kehilangan HP? Pakai kode pemulihan</button></p>
+      <p class="resend" id="resend-row">Belum menerima kode? <button type="button" class="link" id="resend">Kirim Ulang</button></p>
+      <p class="resend" id="alt-row" hidden><button type="button" class="link" id="alt-link">Coba cara lain</button></p>
     </div>
-    <label class="field" id="rc-field" hidden><i class="fa-solid fa-key lead"></i>
-      <input id="rc-in" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="14" placeholder="XXXXX-XXXXX" aria-label="Kode pemulihan"></label>
-    <p class="m-msg" id="m-msg" role="status"></p>
-    <button type="button" class="btn primary" id="verify" data-label="Verifikasi">Verifikasi</button>
-    <p class="resend" id="rc-row" hidden><button type="button" class="link" id="rc-link">Kehilangan HP? Pakai kode pemulihan</button></p>
-    <p class="resend" id="resend-row">Belum menerima kode? <button type="button" class="link" id="resend">Kirim Ulang</button></p>
+
+    <!-- Layar "Coba cara lain": daftar metode alternatif (diisi login.js; Aplikasi Autentikator hanya bila sudah diaktifkan di Setelan) -->
+    <div id="m-alt" hidden>
+      <div class="m-ico"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i></div>
+      <h3 id="a-title">Pilih cara verifikasi</h3>
+      <p id="a-desc">Pilih salah satu cara untuk melanjutkan masuk.</p>
+      <ul class="methods" id="methods"></ul>
+      <p class="help">Tidak bisa mengakses email? Hubungi <a class="link" href="mailto:miraimanagement8@gmail.com">miraimanagement8@gmail.com</a>.</p>
+    </div>
   </div>
 </div>
 <!-- ===== MODAL RESET KATA SANDI ===== -->

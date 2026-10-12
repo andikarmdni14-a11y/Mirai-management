@@ -35,9 +35,14 @@
         async updateUser(p) { const s = sess(); if (!s) return { data: null, error: { message: 'no session' } }; if (p.data) s.user.user_metadata = { ...s.user.user_metadata, ...p.data }; store.setItem(K, JSON.stringify(s)); return { data: { user: s.user }, error: null } },
         async signInWithPassword() { return { data: null, error: { message: 'Invalid login credentials' } } },
         onAuthStateChange() { return { data: { subscription: { unsubscribe() { } } } } },
+        // Uji 2FA: localStorage.mm_fake_aal = 'aal1' (sesi baru lolos kata sandi), mm_fake_totp = '1' (ada autentikator terverifikasi). Kode benar = 123456.
         mfa: {
-          async getAuthenticatorAssuranceLevel() { return { data: { currentLevel: 'aal2', nextLevel: 'aal2' }, error: null } },
-          async listFactors() { return { data: { all: [], totp: [] }, error: null } }
+          async getAuthenticatorAssuranceLevel() { const l = localStorage.getItem('mm_fake_aal') || 'aal2'; return { data: { currentLevel: l, nextLevel: localStorage.getItem('mm_fake_totp') === '1' ? 'aal2' : l }, error: null } },
+          async listFactors() { const f = localStorage.getItem('mm_fake_totp') === '1' ? [{ id: 'f1', status: 'verified', factor_type: 'totp' }] : []; return { data: { all: f.concat(localStorage.getItem('mm_fake_unv') === '1' ? [{ id: 'f2', status: 'unverified' }] : []), totp: f }, error: null } },
+          async enroll() { localStorage.setItem('mm_fake_unv', '1'); return { data: { id: 'f2', totp: { qr_code: 'data:image/svg+xml;utf-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%2264%22 height=%2264%22%3E%3Crect width=%2264%22 height=%2264%22/%3E%3C/svg%3E', secret: 'JBSWY3DPEHPK3PXP' } }, error: null } },
+          async unenroll() { localStorage.removeItem('mm_fake_unv'); return { data: {}, error: null } },
+          async challenge() { return { data: { id: 'c1' }, error: null } },
+          async verify(p) { if (p.code !== '123456') return { data: null, error: { message: 'Invalid TOTP code' } }; localStorage.setItem('mm_fake_totp', '1'); localStorage.setItem('mm_fake_aal', 'aal2'); localStorage.removeItem('mm_fake_unv'); return { data: {}, error: null } }
         }
       };
       return { auth, from, rpc: (name, args) => call(tok(), { kind: 'rpc', name, args }) };

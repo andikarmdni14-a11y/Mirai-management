@@ -20,7 +20,7 @@ async function devCheck() {
   } catch (x) { /* server belum dipasang atau offline: abaikan, RLS tetap melindungi data */ }
   return false
 }
-async function forceOut() { try { ['mm_cache_', 'mm_base_'].forEach(k => localStorage.removeItem(k + UID)); await getSb(); await sb.auth.signOut({ scope: 'local' }) } catch (x) { } location.replace('login.html') }
+async function forceOut() { try { tfaClear(); ['mm_cache_', 'mm_base_'].forEach(k => localStorage.removeItem(k + UID)); await getSb(); await sb.auth.signOut({ scope: 'local' }) } catch (x) { } location.replace('login.html') }
 
 /* ---------- Setelah masuk: persetujuan, kode pemulihan, undangan ---------- */
 async function secAfterLogin(user) {
@@ -29,7 +29,8 @@ async function secAfterLogin(user) {
 }
 async function secNext() {
   try { if (sessionStorage.mm_join) mod('space').then(() => spJoinPrompt()).catch(() => { }) } catch (e) { }
-  try { const r = await sapi('recovery/status'); if (r.remaining === 0 && !sessionStorage.mm_rc_skip) rcDlg(true) } catch (x) { }
+  // Kode pemulihan hanya berguna bagi pengguna Aplikasi Autentikator (kode email tidak butuh pemulihan): ingatkan hanya mereka.
+  try { if (await totpFactor()) { const r = await sapi('recovery/status'); if (r.remaining === 0 && !sessionStorage.mm_rc_skip) rcDlg(true) } } catch (x) { }
 }
 function tosDlg(done) {
   const d = mkDlg('tosd', `<form id="tosf"><h3 class="ct">Syarat dan Privasi diperbarui</h3>
@@ -129,4 +130,61 @@ async function delDlg() {
   d.showModal()
 }
 
-const SX = { rc: () => rcDlg(false), dev: devDlg, snap: snapDlg, export: () => exportAll().catch(x => toast('Gagal mengunduh: ' + (x.message || ''))), del: delDlg };
+/* ---------- Aplikasi Autentikator (toggle di Setelan > Keamanan) ----------
+   Sumber kebenaran tunggal: ada tidaknya faktor TOTP TERVERIFIKASI di Supabase. Tidak ada: Off (bawaan). Ada: On.
+   Menyalakan: daftar faktor, pindai QR, masukkan 6 digit (terkirim otomatis). Mematikan: api/twofa/totp-off (autentikator dilepas, pemilik diberi email).
+   Saat On, "Aplikasi Autentikator" muncul di login.html > "Coba cara lain". Masuk lewat kode email tetap bisa (sesuai rancangan). */
+const totpFactor = async () => { await getSb(); const { data } = await sb.auth.mfa.listFactors(); return (data && data.totp && data.totp[0]) || null };
+async function tgInit() {
+  const t = $('#sda'); t.disabled = true; t.title = '';
+  try { const f = await totpFactor(); t.checked = !!f; $('#sdrc').hidden = !f; t.disabled = false }
+  catch (x) { t.checked = false; t.title = 'Butuh koneksi internet' }
+}
+function tgSet(t) {
+  const want = t.checked; t.checked = !want;      // tampilan baru berubah setelah benar-benar berhasil
+  if (want) return tgOn(t);
+  ask('Matikan Aplikasi Autentikator?', 'Masuk akan memakai kode yang dikirim ke email saja, dan kode pemulihan 2FA lama dihapus. Kami juga mengirim email pemberitahuan.', 'Ya, matikan', () => tgOff(t));
+}
+async function tgOff(t) {
+  t.disabled = true;
+  try { await sapi('twofa/totp-off', {}); t.checked = false; $('#sdrc').hidden = true; toast('Aplikasi Autentikator dimatikan') }
+  catch (x) { toast('Gagal mematikan: ' + (x.message || 'coba lagi')) }
+  t.disabled = false;
+}
+async function tgOn(t) {
+  let f;
+  try {
+    await getSb(); const { data: l } = await sb.auth.mfa.listFactors();
+    for (const x of l.all.filter(x => x.status == 'unverified')) await sb.auth.mfa.unenroll({ factorId: x.id });   // sisa percobaan sebelumnya
+    const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Mirai ' + Date.now() }); if (error) throw error; f = data;
+  } catch (x) { return toast('Gagal menyiapkan autentikator: ' + (x.message || 'coba lagi')) }
+  const raw = f.totp.qr_code.replace(/^data:image\/svg\+xml;[^,]*,/, ''), svg = raw.startsWith('<') ? raw : decodeURIComponent(raw);
+  const d = mkDlg('tgd', `<form id="tgf" novalidate><h3 class="ct">Aktifkan Aplikasi Autentikator</h3>
+    <p>1. Pindai kode QR ini dengan Google Authenticator, Authy, atau aplikasi sejenis.</p>
+    <div class="qrw"><img id="tgq" alt="Kode QR untuk aplikasi autentikator" width="168" height="168"></div>
+    <small>Tidak bisa memindai? Masukkan kunci ini secara manual: <code class="key" id="tgk"></code></small>
+    <p>2. Masukkan 6 digit kode yang tampil di aplikasi.</p>
+    <input id="tgc" class="tgc" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000" aria-label="Kode 6 digit dari aplikasi autentikator">
+    <div class="err" id="tge" role="alert"></div>
+    <div class="rw"><button type="button" class="bt g" id="tgx">Batal</button><button class="bt" id="tgy">Aktifkan</button></div></form>`);
+  $('#tgq').src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); $('#tgk').textContent = f.totp.secret;
+  let done = false, busy = false;
+  const go = async () => {
+    const code = $('#tgc').value.replace(/\D/g, ''); if (code.length !== 6 || busy) return;
+    busy = true; $('#tgy').disabled = true; $('#tge').textContent = '';
+    try {
+      const { data: c, error: e1 } = await sb.auth.mfa.challenge({ factorId: f.id }); if (e1) throw e1;
+      const { error } = await sb.auth.mfa.verify({ factorId: f.id, challengeId: c.id, code });
+      if (error) { $('#tge').textContent = 'Kode salah atau kedaluwarsa. Coba lagi.'; $('#tgc').value = ''; $('#tgc').focus(); return }
+      done = true; d.close(); t.checked = true; $('#sdrc').hidden = false; toast('Aplikasi Autentikator aktif'); rcDlg(true);   // langsung tawarkan simpan kode pemulihan
+    } catch (x) { $('#tge').textContent = navigator.onLine ? 'Gagal memeriksa kode: ' + (x.message || 'coba lagi') : 'Butuh koneksi internet.' }
+    finally { busy = false; $('#tgy').disabled = false }
+  };
+  $('#tgc').oninput = e => { e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6); if (e.target.value.length === 6) go() };   // kirim otomatis di digit ke-6
+  $('#tgf').onsubmit = e => { e.preventDefault(); go() };
+  $('#tgx').onclick = () => d.close();
+  d.onclose = () => { if (!done) { t.checked = false; sb.auth.mfa.unenroll({ factorId: f.id }).catch(() => { }) } };   // batal: lepas faktor yang belum terverifikasi
+  d.showModal(); $('#tgc').focus();
+}
+
+const SX = { rc: () => rcDlg(false), dev: devDlg, snap: snapDlg, export: () => exportAll().catch(x => toast('Gagal mengunduh: ' + (x.message || ''))), del: delDlg, tg: tgInit, tgSet };

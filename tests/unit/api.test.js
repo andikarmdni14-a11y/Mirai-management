@@ -8,7 +8,7 @@ const recovery = require('../../api/recovery/[a].js'), account = require('../../
 const jwt = (o) => 'h.' + Buffer.from(JSON.stringify(o)).toString('base64url') + '.s';
 const A2 = jwt({ aal: 'aal2', session_id: 'S1' }), A1 = jwt({ aal: 'aal1', session_id: 'S1' }), A2b = jwt({ aal: 'aal2', session_id: 'S2' });
 let db, calls;
-function reset(extra) { db = { recovery_codes: [], recovery_state: [], user_devices: [], factors: [{ id: 'f1' }, { id: 'f2' }], failFactor: false, ...extra }; calls = { mail: [], logout: [], del: [], factorDel: [] } }
+function reset(extra) { db = { recovery_codes: [], recovery_state: [], user_devices: [], session_2fa: [], factors: [{ id: 'f1' }, { id: 'f2' }], failFactor: false, ...extra }; calls = { mail: [], logout: [], del: [], factorDel: [] } }
 const rows = (t, q) => db[t].filter(r => [...q.entries()].every(([k, v]) => { if (['select', 'order', 'limit'].includes(k)) return true; if (v === 'is.null') return r[k] == null; if (v === 'not.is.null') return r[k] != null; return String(r[k]) === v.replace(/^eq\./, '') }));
 global.fetch = async (url, o = {}) => {
   const u = new URL(url), m = (o.method || 'GET').toUpperCase(), body = o.body ? JSON.parse(o.body) : null, ok = (d, s = 200) => ({ ok: s < 300, status: s, json: async () => d });

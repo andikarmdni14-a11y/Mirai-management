@@ -6,13 +6,21 @@ const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, ch => '&#' + ch.
 const claims = jwt => { try { return JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url')) } catch (e) { return {} } };
 const rest = (path, o) => fetch(S + '/rest/v1/' + path, { ...o, headers: { ...H, ...(o && o.headers) } });
 
-// Memeriksa sesi pengguna. level 'aal2' (bawaan): sesi harus sudah lolos 2FA dan belum dikeluarkan lewat "Perangkat aktif".
-// level 'any': sesi valid tingkat apa pun (dipakai hanya oleh kode pemulihan, saat pengguna belum bisa lolos 2FA).
+// 2FA lewat kode email (v23): sesi yang lolos dicatat di tabel session_2fa dan setara dengan aal2 (sama seperti public.authed() di schema.sql).
+async function emailOk(uid, sid) {
+  if (!sid) return false;
+  try { const x = await rest(`session_2fa?select=session_id&user_id=eq.${uid}&session_id=eq.${encodeURIComponent(sid)}&limit=1`); return x.ok && (await x.json()).length > 0 } catch (e) { return false }
+}
+// Memeriksa sesi pengguna. level 'aal2' (bawaan): sesi harus sudah lolos 2FA (autentikator = aal2, atau kode email = session_2fa) dan belum dikeluarkan lewat "Perangkat aktif".
+// level 'any': sesi valid tingkat apa pun (dipakai oleh kode pemulihan dan alur kode email, saat pengguna belum lolos 2FA).
+// u.tfa: 'totp' | 'email' | null, sehingga pemanggil tahu lewat cara apa sesi ini lolos.
 async function user(req, level) {
   const jwt = (req.headers.authorization || '').replace(/^Bearer /, ''); if (!jwt) return null;
   const r = await fetch(S + '/auth/v1/user', { headers: { apikey: K, Authorization: 'Bearer ' + jwt } }); if (!r.ok) return null;
-  const cl = claims(jwt); if (level !== 'any' && cl.aal !== 'aal2') return null;
+  const cl = claims(jwt);
   const u = await r.json(); u.jwt = jwt; u.sid = cl.session_id || null; u.aal = cl.aal;
+  u.tfa = cl.aal === 'aal2' ? 'totp' : (await emailOk(u.id, u.sid)) ? 'email' : null;
+  if (level !== 'any' && !u.tfa) return null;
   if (level !== 'any' && u.sid) { const x = await rest(`user_devices?select=device_id&user_id=eq.${u.id}&session_id=eq.${encodeURIComponent(u.sid)}&revoked_at=not.is.null&limit=1`); if (x.ok && (await x.json()).length) return null }
   return u;
 }

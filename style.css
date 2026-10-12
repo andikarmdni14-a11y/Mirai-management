@@ -12,6 +12,10 @@
     --mu: #A1A1AA;
     --em: #10B981;
     --a1: #10B981;
+    /* Hijau utama Mirai: SATU kode (#047857 = rgb(4, 120, 87)) untuk semua elemen interaktif (tombol, progress bar, toggle, centang, fokus), di tema gelap maupun terang. --em/--a1 hanya untuk teks aksen di atas latar gelap. */
+    --pri: #047857;
+    --pri-h: #065F46;
+    --on-pri: #FFFFFF;
     --a2: #A1A1AA;
     --prt: #04261B;
     --wr: #F59E0B;
@@ -103,7 +107,7 @@ b {
 }
 
 :focus-visible {
-    outline: 2px solid var(--a1);
+    outline: 2px solid var(--pri);
     outline-offset: 2px;
 }
 
@@ -166,8 +170,8 @@ main > section:not([hidden]) {
 }
 
 .bt {
-    background: var(--em);
-    color: var(--prt);
+    background: var(--pri);
+    color: var(--on-pri);
     border: 0;
     border-radius: 8px;
     padding: 11px 16px;
@@ -469,8 +473,8 @@ main {
     right: 18px;
     bottom: calc(84px + env(safe-area-inset-bottom, 0px));
     z-index: 6;
-    background: var(--em);
-    color: var(--prt);
+    background: var(--pri);
+    color: var(--on-pri);
     border: 0;
     border-radius: 999px;
     height: 52px;
@@ -692,7 +696,7 @@ dialog form {
     }
 
     .nav a.on {
-        box-shadow: inset 2px 0 0 var(--a1);
+        box-shadow: inset 2px 0 0 var(--pri);
     }
 
     main {
@@ -788,7 +792,7 @@ dialog form {
     place-items: center;
 }
 
-/* Logo: PNG hitam + aksen hijau. Mode gelap: invert + hue-rotate membuat bagian gelap jadi putih, hijau tetap hijau (lebih terang). Setara Tailwind: dark:invert dark:hue-rotate-180 */
+/* Logo: selalu di atas petak putih polos (garis hitam + panah hijau tetap kontras), di tema gelap maupun terang. Tanpa filter invert. */
 .brand-logo {
     width: 36px;
     height: 36px;
@@ -796,6 +800,10 @@ dialog form {
     display: block;
     object-fit: contain;
     user-select: none;
+    background: #FFFFFF;
+    border-radius: 22%;
+    padding: 8%;
+    box-shadow: 0 0 0 1px rgba(9, 9, 11, .08);
 }
 
 .login-logo {
@@ -806,10 +814,6 @@ dialog form {
 
 .nav .br {
     gap: 12px;
-}
-
-:root:not([data-theme=light]) .brand-logo {
-    filter: invert(1) hue-rotate(180deg) brightness(1.15);
 }
 
 /* v10: dompet, analisis, streak */
@@ -1192,7 +1196,7 @@ select {
 }
 
 .rf {
-    stroke: var(--a1);
+    stroke: var(--pri);
     stroke-linecap: round;
     stroke-dasharray: 100;
     stroke-dashoffset: 100;
@@ -1305,7 +1309,7 @@ input[type=checkbox] {
     width: 18px;
     height: 18px;
     padding: 0;
-    accent-color: var(--a1);
+    accent-color: var(--pri);
     cursor: pointer;
     flex: none;
 }
@@ -1700,8 +1704,8 @@ main {
     width: 26px;
     height: 26px;
     border-radius: 50%;
-    background: var(--me);
-    color: var(--meT);
+    background: var(--pri);
+    color: var(--on-pri);
     font: 600 12px/1 var(--fs);
 }
 
@@ -1761,7 +1765,7 @@ main {
 .sg {
     display: block;
     height: 100%;
-    background: var(--me);
+    background: var(--pri);
 }
 
 .sg.pa {
@@ -1779,7 +1783,7 @@ main {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-    background: var(--me);
+    background: var(--pri);
 }
 
 .dot.pa {
@@ -1833,13 +1837,13 @@ main {
 }
 
 .pill input:checked + span {
-    background: var(--me);
-    border-color: var(--me);
-    color: var(--meT);
+    background: var(--pri);
+    border-color: var(--pri);
+    color: var(--on-pri);
 }
 
 .pill input:focus-visible + span {
-    outline: 2px solid var(--a1);
+    outline: 2px solid var(--pri);
     outline-offset: 2px;
 }
 
@@ -2232,8 +2236,8 @@ input[type=checkbox] {
     height: 44px;
     border: 0;
     border-radius: 50%;
-    background: var(--em);
-    color: var(--prt);
+    background: var(--pri);
+    color: var(--on-pri);
     font: 600 17px var(--fs);
     cursor: pointer;
     transition: var(--ease);
@@ -2297,8 +2301,8 @@ input[type=checkbox] {
     width: 52px;
     height: 52px;
     border-radius: 50%;
-    background: var(--em);
-    color: var(--prt);
+    background: var(--pri);
+    color: var(--on-pri);
     font: 600 22px var(--fs);
 }
 
@@ -2350,6 +2354,77 @@ input[type=checkbox] {
 
 .opt span {
     display: grid;
+}
+
+/* Toggle switch (Setelan). Warna hidup = hijau utama --pri, sama dengan tombol dan progress bar. */
+.opt.sw-row {
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+}
+
+input[type=checkbox].sw {
+    -webkit-appearance: none;
+    appearance: none;
+    position: relative;
+    flex: none;
+    width: 48px;
+    height: 28px;
+    margin: 0;
+    border: 0;
+    border-radius: 999px;
+    background: #71717A;
+    cursor: pointer;
+    transition: background .2s;
+}
+
+input[type=checkbox].sw::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: #FFFFFF;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .35);
+    transition: transform .2s;
+}
+
+input[type=checkbox].sw:checked {
+    background: var(--pri);
+}
+
+input[type=checkbox].sw:checked::after {
+    transform: translateX(20px);
+}
+
+input[type=checkbox].sw:focus-visible {
+    outline: 2px solid var(--pri);
+    outline-offset: 2px;
+}
+
+input[type=checkbox].sw:disabled {
+    opacity: .55;
+    cursor: default;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    input[type=checkbox].sw,
+    input[type=checkbox].sw::after {
+        transition: none;
+    }
+}
+
+.sec-h {
+    display: block;
+    margin: 4px 0 -2px;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--mu);
 }
 
 body.pv :is(#bal,#inc,#exp,#net,.nm,.wc .big,.li>b:last-child,td.am,#rs .big):not(.rv) {
@@ -2591,8 +2666,8 @@ td.am,
 }
 
 #lkf input:focus {
-    border-color: var(--em);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--em) 16%, transparent);
+    border-color: var(--pri);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--pri) 16%, transparent);
 }
 
 #lkf .bt {
@@ -2633,8 +2708,8 @@ td.am,
 }
 
 .pdots i.on {
-    background: var(--em);
-    border-color: var(--em);
+    background: var(--pri);
+    border-color: var(--pri);
     transform: scale(1.15);
 }
 
@@ -2654,12 +2729,12 @@ td.am,
 }
 
 .pk:active {
-    border-color: var(--em);
-    background: color-mix(in srgb, var(--em) 10%, var(--cd));
+    border-color: var(--pri);
+    background: color-mix(in srgb, var(--pri) 10%, var(--cd));
 }
 
 .pk:focus-visible {
-    outline: 2px solid var(--em);
+    outline: 2px solid var(--pri);
     outline-offset: 2px;
 }
 
@@ -2828,7 +2903,7 @@ v22: status sinkron, template cepat, impor CSV, utang/cicilan, kode pemulihan
 
 .tpb:hover,
 .tpb:focus-visible {
-    border-color: var(--em);
+    border-color: var(--pri);
 }
 
 #ach {
@@ -2936,4 +3011,31 @@ v22: status sinkron, template cepat, impor CSV, utang/cicilan, kode pemulihan
 
 #chs .big {
     font-size: clamp(17px, 5vw, 24px);
+}
+
+/* Dialog Aplikasi Autentikator (Setelan): satu kolom 6 digit, terkirim otomatis di digit ke-6 */
+.tgc {
+    width: 100%;
+    height: 52px;
+    border-radius: 12px;
+    text-align: center;
+    font: 600 22px var(--fs);
+    letter-spacing: .5em;
+    text-indent: .5em;
+}
+
+/* Setelan di layar sempit: kolom form boleh menyusut dan teks tombol panjang boleh turun baris (sebelumnya form melebar melewati dialog, sehingga toggle dan tombol terpotong di kanan) */
+#sdf {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+#sd .bt.s {
+    white-space: normal;
+    text-align: center;
+}
+
+#tgq {
+    display: block;
+    margin: 0 auto;
+    background: #FFFFFF;
 }

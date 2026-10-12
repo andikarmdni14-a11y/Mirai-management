@@ -13,8 +13,8 @@ const mode = p => live(p) ? 'live' : process.env.LINK_SANDBOX == '1' ? 'sandbox'
 const pick = (o, p) => p.split('.').reduce((a, k) => a && a[k], o);
 const esc = s => String(s).replace(/[&<>"]/g, ch => '&#' + ch.charCodeAt(0) + ';');
 const sbx = (uid, p) => { const h = c.createHash('sha256').update(uid + p).digest(); return { b: 500000 + Math.round(h.readUInt32BE(0) % 9500000 / 1000) * 1000, m: '••' + String(h.readUInt16BE(4) % 10000).padStart(4, '0') } };
-// Hanya sesi yang valid DAN sudah lolos 2FA (aal2), sama dengan kebijakan RLS
-const user = async req => { const jwt = (req.headers.authorization || '').replace(/^Bearer /, ''); if (!jwt) return null; const r = await fetch(S + '/auth/v1/user', { headers: { apikey: K, Authorization: 'Bearer ' + jwt } }); if (!r.ok) return null; let aal; try { aal = JSON.parse(Buffer.from(jwt.split('.')[1], 'base64url')).aal } catch (e) { } return aal == 'aal2' ? r.json() : null };
+// Hanya sesi yang valid DAN sudah lolos 2FA (autentikator atau kode email), sama dengan kebijakan RLS. Pemeriksaannya dipakai bersama (api/_lib.js).
+const { user } = require('../_lib');
 const tokenReq = async (p, form) => {
   const r = await fetch(env(p, 'TOKEN'), { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' }, body: new URLSearchParams({ ...form, client_id: env(p, 'ID'), client_secret: env(p, 'SECRET') }) }), j = await r.json().catch(() => ({}));
   if (!r.ok || !j.access_token) throw new Error('Penyedia menolak penukaran token'); return { a: j.access_token, r: j.refresh_token || form.refresh_token, e: Date.now() + (j.expires_in || 3600) * 1e3 }

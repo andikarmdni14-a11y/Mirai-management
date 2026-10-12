@@ -1,6 +1,10 @@
 :root {
-    --g: #047857;
-    --gh: #065f46;
+    /* Hijau utama Mirai: SATU kode (#047857 = rgb(4, 120, 87)) untuk semua elemen interaktif: tombol, progress bar, toggle, centang, fokus. */
+    --pri: #047857;
+    --pri-h: #065F46;
+    --on-pri: #FFFFFF;
+    --g: var(--pri);
+    --gh: var(--pri-h);
     --bd: #E4E4E7;
     --bd2: #D4D4D8;
     --in: #FAFAFA;
@@ -153,9 +157,9 @@ a {
 .logo {
     width: 56px;
     height: 56px;
-    border-radius: 50%;
-    border: 1.5px dashed var(--bd2);
-    background: var(--in);
+    border-radius: 14px;
+    border: 1px solid var(--bd);
+    background: #FFFFFF;
     margin-bottom: 20px;
     overflow: hidden;
 }
@@ -163,9 +167,10 @@ a {
 .logo img {
     width: 100%;
     height: 100%;
+    padding: 5px;
     object-fit: contain;
     display: block;
-    background: #fff;
+    background: #FFFFFF;
 }
 
 h1 {
@@ -440,7 +445,8 @@ h1 {
     color: var(--tx);
 }
 
-.modal-box > p {
+.modal-box > p,
+.modal-box > div > p {
     color: var(--mu);
     font-size: 14px;
     margin: 4px 0 20px;
@@ -471,6 +477,10 @@ h1 {
     box-shadow: 0 0 0 3px rgba(4, 120, 87, .14);
 }
 
+.otp input:disabled {
+    opacity: .6;
+}
+
 .otp.err {
     animation: shake .35s;
 }
@@ -488,6 +498,10 @@ h1 {
 
 .m-msg.ok {
     color: var(--g) !important;
+}
+
+.m-msg.info {
+    color: var(--mu) !important;
 }
 
 .resend {
@@ -593,27 +607,6 @@ h1 {
     overflow: auto;
 }
 
-.m-qr {
-    margin: -6px 0 16px;
-}
-
-.m-qr img {
-    display: block;
-    width: 168px;
-    height: 168px;
-    margin: 0 auto 8px;
-}
-
-.m-qr code {
-    display: block;
-    padding: 6px 8px;
-    background: var(--in);
-    border: 1px solid var(--bd);
-    border-radius: 8px;
-    font-size: 12px;
-    word-break: break-all;
-}
-
 /* Modal reset kata sandi */
 .err.ok {
     color: var(--g);
@@ -630,4 +623,103 @@ h1 {
 #p-form[data-m=request] .eye,
 #p-form[data-m=request] #p-fb {
     display: none;
+}
+
+/* Modal OTP: tombol Kembali, layar "Coba cara lain" */
+.modal-box {
+    position: relative;
+}
+
+.m-back {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--ink);
+    font-size: 16px;
+    cursor: pointer;
+    transition: background .2s;
+}
+
+.m-back:hover {
+    background: var(--in);
+}
+
+.methods {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: 10px;
+    text-align: left;
+}
+
+.method {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+    min-height: 64px;
+    padding: 12px 14px;
+    border: 1px solid var(--bd2);
+    border-radius: 12px;
+    background: #fff;
+    text-align: left;
+    cursor: pointer;
+    transition: background .2s, border-color .2s;
+}
+
+.method:hover {
+    background: var(--in);
+    border-color: var(--pri);
+}
+
+.method > i:first-child {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--soft);
+    color: var(--pri);
+    font-size: 16px;
+}
+
+.method > span {
+    flex: 1;
+    min-width: 0;
+}
+
+.method b {
+    display: block;
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.method small {
+    display: block;
+    color: var(--mu);
+    font-size: 13px;
+    line-height: 1.35;
+}
+
+.method > i:last-child {
+    flex: none;
+    color: var(--mu);
+    font-size: 12px;
+}
+
+.modal .help {
+    margin: 18px 0 0;
+    color: var(--mu);
+    font-size: 13px;
+    line-height: 1.5;
 }

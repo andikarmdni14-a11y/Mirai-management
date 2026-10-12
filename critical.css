@@ -13,6 +13,10 @@
     --mu: #A1A1AA;
     --em: #10B981;
     --a1: #10B981;
+    /* Hijau utama Mirai: SATU kode (#047857 = rgb(4, 120, 87)) untuk semua elemen interaktif (tombol, progress bar, toggle, centang, fokus), di tema gelap maupun terang. --em/--a1 hanya untuk teks aksen di atas latar gelap. */
+    --pri: #047857;
+    --pri-h: #065F46;
+    --on-pri: #FFFFFF;
     --a2: #A1A1AA;
     --prt: #04261B;
     --wr: #F59E0B;
@@ -104,8 +108,8 @@ main > section:not([hidden]) {
 }
 
 .bt {
-    background: var(--em);
-    color: var(--prt);
+    background: var(--pri);
+    color: var(--on-pri);
     border: 0px;
     border-radius: 8px;
     padding: 11px 16px;
@@ -197,16 +201,16 @@ select:focus {
     display: block;
     object-fit: contain;
     user-select: none;
+    background: #FFFFFF;
+    border-radius: 22%;
+    padding: 8%;
+    box-shadow: 0 0 0 1px rgba(9, 9, 11, .08);
 }
 
 .login-logo {
     width: 44px;
     height: 44px;
     margin-bottom: 16px;
-}
-
-:root:not([data-theme="light"]) .brand-logo {
-    filter: invert(1) hue-rotate(180deg) brightness(1.15);
 }
 
 :root {

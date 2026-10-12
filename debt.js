@@ -23,7 +23,7 @@ function dtList(k) {
   if (!L.length) return k == 'utang' ? emp('Tidak ada utang tercatat', 'Catat pinjaman dari teman, keluarga, atau koperasi agar cicilannya tidak terlupa.', '', 'landmark') : emp('Tidak ada piutang tercatat', 'Catat uang yang Anda pinjamkan supaya mudah menagih dan tidak lupa.', '', 'landmark');
   return L.map(d => {
     const left = dleft(d), p = Math.min(100, dpaid(d) / d.amt * 100), n = d.due ? ndue(d.due) : null, k2 = !left ? 'var(--a1)' : n !== null && n < 0 ? 'var(--rd)' : n !== null && n <= 7 ? 'var(--wr)' : 'var(--mu)';
-    return `<div class="card"><div class="rw"><b>${E(d.who)}</b><b>${RM(left)}</b></div><div class="bar"><i style="width:${p}%;background:var(--em)"></i></div>
+    return `<div class="card"><div class="rw"><b>${E(d.who)}</b><b>${RM(left)}</b></div><div class="bar"><i style="width:${p}%;background:var(--pri)"></i></div>
       <small>Total ${RM(d.amt)}, ${k == 'utang' ? 'sudah dibayar' : 'sudah diterima'} ${RM(dpaid(d))}${d.note ? ', ' + E(d.note) : ''}</small>
       <div class="rw mt-12"><b style="color:${k2}">${!left ? 'Lunas' : d.due ? dtxt(n) + ', ' + fdl(d.due) : 'Tanpa jatuh tempo'}</b><span>${left ? `<button class="bt s" data-dpay="${d.id}">${k == 'utang' ? 'Catat bayar' : 'Catat terima'}</button> ` : ''}<button class="bt s g" data-ddel="${d.id}" aria-label="Hapus ${E(d.who)}">Hapus</button></span></div>
       ${(d.pays || []).length ? `<details class="mt-8"><summary><small>Riwayat (${d.pays.length})</small></summary>${[...d.pays].reverse().map(p => `<div class="rw"><small>${fdl(p.date)}</small><small>${RM(p.amt)}</small></div>`).join('')}</details>` : ''}</div>`
@@ -33,7 +33,7 @@ function clList() {
   if (!CL.length) return emp('Belum ada cicilan', 'Catat cicilan motor, HP, KPR, atau tagihan PayLater. Pengingat jatuh tempo ikut masuk ke Notifikasi.', '', 'bill');
   return [...CL].sort((a, b) => (MC.instLeftN(a) == 0) - (MC.instLeftN(b) == 0) || MC.instNext(a).localeCompare(MC.instNext(b))).map(c => {
     const pn = MC.instPaidN(c), left = MC.instLeftN(c), nx = MC.instNext(c), n = ndue(nx), p = Math.min(100, pn / c.months * 100), k2 = !left ? 'var(--a1)' : n < 0 ? 'var(--rd)' : n <= 7 ? 'var(--wr)' : 'var(--mu)';
-    return `<div class="card"><div class="rw"><b>${E(c.n)} <span class="tag">${c.k == 'paylater' ? 'PayLater' : 'Cicilan'}</span></b><b>${RM(c.per)}</b></div><div class="bar"><i style="width:${p}%;background:var(--em)"></i></div>
+    return `<div class="card"><div class="rw"><b>${E(c.n)} <span class="tag">${c.k == 'paylater' ? 'PayLater' : 'Cicilan'}</span></b><b>${RM(c.per)}</b></div><div class="bar"><i style="width:${p}%;background:var(--pri)"></i></div>
       <small>${left ? 'Angsuran ke-' + (pn + 1) + ' dari ' + c.months + ', sisa ' + RM(MC.instLeft(c)) : 'Semua ' + c.months + ' angsuran sudah dibayar'}, kategori ${E(c.cat)}</small>
       <div class="rw mt-12"><b style="color:${k2}">${!left ? 'Lunas' : dtxt(n) + ', ' + fdl(nx)}</b><span>${left ? `<button class="bt s" data-cpay="${c.id}">Bayar angsuran</button> ` : ''}<button class="bt s g" data-cdel="${c.id}" aria-label="Hapus ${E(c.n)}">Hapus</button></span></div></div>`
   }).join('')

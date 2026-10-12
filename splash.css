@@ -5,8 +5,8 @@
     --stx: #FAFAFA;
     --smu: #A1A1AA;
     --sln: #27272A;
-    --sac: #10B981;
-    --sgl: rgba(16, 185, 129, .16);
+    --sac: #047857;
+    --sgl: rgba(4, 120, 87, .24);
     position: fixed;
     top: 0;
     left: 0;
@@ -28,7 +28,7 @@
     --stx: #09090B;
     --smu: #52525B;
     --sln: #E4E4E7;
-    --sgl: rgba(16, 185, 129, .2);
+    --sgl: rgba(4, 120, 87, .22);
 }
 
 .sp-in {
@@ -50,7 +50,7 @@
     content: "";
     position: absolute;
     inset: -10px;
-    border-radius: 50%;
+    border-radius: 24%;
     box-shadow: 0 0 64px 14px var(--sgl);
     animation: sppulse 2.6s ease-in-out infinite;
 }
@@ -61,10 +61,9 @@
     width: 100%;
     height: 100%;
     object-fit: contain;
-}
-
-:root[data-theme=dark] #splash .sp-logo img {
-    filter: invert(1) hue-rotate(180deg) brightness(1.15);
+    padding: 8%;
+    border-radius: 22%;
+    background: #FFFFFF;
 }
 
 .sp-name {

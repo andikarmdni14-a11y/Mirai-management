@@ -29,7 +29,8 @@
   const css = d.createElement('style');
   css.textContent = '.pwa-sn,.pwa-bn{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:700;display:flex;align-items:center;gap:12px;max-width:460px;margin:auto;padding:12px 14px;border-radius:12px;background:var(--cd,#fff);color:var(--tx,#09090B);border:1px solid var(--bd,#E4E4E7);box-shadow:0 12px 32px rgba(0,0,0,.25);font:500 13px/1.4 var(--fs,Geist,system-ui,sans-serif)}' +
     '.pwa-sn span,.pwa-bn span{flex:1}.pwa-sn b,.pwa-bn b{display:block;font-weight:600}.pwa-sn small,.pwa-bn small{display:block;color:var(--mu,#52525B);font-size:12px}' +
-    '.pwa-b{border:0;border-radius:8px;padding:9px 14px;min-height:40px;background:var(--em,#047857);color:var(--prt,#fff);font:600 13px var(--fs,system-ui,sans-serif);cursor:pointer}.pwa-b.g{background:transparent;color:var(--tx,#09090B);border:1px solid var(--bd,#E4E4E7)}' +
+    '.pwa-bn{padding-right:46px}.pwa-x{position:absolute;top:6px;right:6px;display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;border-radius:50%;background:transparent;color:var(--mu,#52525B);cursor:pointer}.pwa-x:hover{background:var(--hov,#F4F4F5)}.pwa-x:focus-visible{outline:2px solid var(--pri,#047857);outline-offset:1px}' +
+    '.pwa-b{border:0;border-radius:8px;padding:9px 14px;min-height:40px;background:var(--pri,#047857);color:var(--on-pri,#fff);font:600 13px var(--fs,system-ui,sans-serif);cursor:pointer}.pwa-b.g{background:transparent;color:var(--tx,#09090B);border:1px solid var(--bd,#E4E4E7)}' +
     '.pwa-dlg{border:1px solid var(--bd,#E4E4E7);border-radius:14px;padding:22px;width:min(420px,92%);background:var(--cd,#fff);color:var(--tx,#09090B);font:400 14px/1.55 var(--fs,Geist,system-ui,sans-serif)}.pwa-dlg::backdrop{background:rgba(0,0,0,.6)}' +
     '.pwa-dlg h3{margin:0 0 8px;font-size:18px}.pwa-dlg ol{padding-left:20px;margin:10px 0 16px}.pwa-dlg li{margin:6px 0}.pwa-dlg .r{display:flex;justify-content:flex-end}';
   d.head.appendChild(css);
@@ -37,7 +38,9 @@
   const snack = (title, sub, label, fn, cls) => {
     const e = d.createElement('div'); e.className = cls || 'pwa-sn'; e.setAttribute('role', 'status');
     const s = d.createElement('span'), b = d.createElement('b'), m = d.createElement('small'), btn = d.createElement('button'), x = d.createElement('button');
-    b.textContent = title; m.textContent = sub || ''; s.append(b, m); btn.className = 'pwa-b'; btn.type = 'button'; btn.textContent = label; x.className = 'pwa-b g'; x.type = 'button'; x.textContent = 'Nanti'; x.setAttribute('aria-label', 'Tutup');
+    b.textContent = title; m.textContent = sub || ''; s.append(b, m); btn.className = 'pwa-b'; btn.type = 'button'; btn.textContent = label; x.type = 'button'; x.setAttribute('aria-label', 'Tutup');
+    // Spanduk pasang: tombol X kecil di sudut kanan atas. Spanduk pembaruan: tetap tombol teks "Nanti".
+    if (cls === 'pwa-bn') { x.className = 'pwa-x'; x.innerHTML = '<svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true" focusable="false"><path d="M2 2l10 10M12 2L2 12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>' } else { x.className = 'pwa-b g'; x.textContent = 'Nanti' }
     btn.onclick = () => { e.remove(); fn() }; x.onclick = () => e.remove(); e.append(s, btn, x); d.body.append(e); return e;
   };
 
@@ -99,7 +102,7 @@
     const b = d.getElementById('inst'); if (b) { b.hidden = standalone(); b.onclick = install }
     if (d.getElementById('card') && !standalone() && !d.querySelector('.pwa-bn') && (bip || ios) && !(+ls('mm_inst_x') > Date.now())) {
       const e = snack('Pasang Mirai di HP Anda', 'Buka dari layar utama, bisa dipakai tanpa sinyal.', 'Pasang', install, 'pwa-bn');
-      e.querySelector('.pwa-b.g').onclick = () => { ls('mm_inst_x', String(Date.now() + 14 * 864e5)); e.remove() };
+      e.querySelector('.pwa-x').onclick = () => { ls('mm_inst_x', String(Date.now() + 14 * 864e5)); e.remove() };
     }
   }
   d.addEventListener('DOMContentLoaded', sync); if (d.readyState !== 'loading') sync();

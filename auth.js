@@ -10,7 +10,14 @@ async function enroll() {
     const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Mirai ' + Date.now() }); if (error) return $('#er').textContent = error.message; fid = data.id;
     { const raw = data.totp.qr_code.replace(/^data:image\/svg\+xml;[^,]*,/, ''), svg = raw.startsWith('<') ? raw : decodeURIComponent(raw), im = new Image(); im.alt = 'QR 2FA'; im.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg); $('#qr').replaceChildren(im) } $('#sk').innerHTML = `Pindai QR dengan Google Authenticator atau Authy, atau masukkan kunci ini:<code class="key">${data.totp.secret}</code>`
 }
-async function after() { await getSb(); const { data: a } = await sb.auth.mfa.getAuthenticatorAssuranceLevel(); if (a.currentLevel == 'aal2') return enter(); const { data: f } = await sb.auth.mfa.listFactors(); if (f.totp.length) { fid = f.totp[0].id; md = '2fa'; ui(); $('#code').focus() } else enroll() }
+async function after() {
+    await getSb(); const { data: a } = await sb.auth.mfa.getAuthenticatorAssuranceLevel(); if (a.currentLevel == 'aal2') return enter();
+    // v23: 2FA bawaan = kode email, diurus login.html. Sesi yang sudah lolos lewat kode email boleh masuk (offline: percaya penanda lokal); selain itu ke login.html.
+    const { data: { session } } = await sb.auth.getSession(); let st = null;
+    try { const r = await fetch('/api/twofa/status', { headers: { Authorization: 'Bearer ' + session.access_token } }); st = r.ok ? await r.json() : { verified: false } } catch (x) { }
+    if (st ? st.verified : tfaKnown(session)) { if (st) tfaMark(session); return enter() }
+    location.replace('login.html')
+}
 async function ver(code) { await getSb(); const { data: c, error: e } = await sb.auth.mfa.challenge({ factorId: fid }); if (e) return e; const { error } = await sb.auth.mfa.verify({ factorId: fid, challengeId: c.id, code }); return error }
 async function enter() {
     await getSb(); const { data: { session } } = await sb.auth.getSession(), user = session.user; US = user.email; UID = user.id; FNM = user.user_metadata?.full_name || ''; window.__ob = user.user_metadata?.ob; let off = false;
@@ -28,7 +35,7 @@ async function logout(force) {
         if (navigator.onLine) await syncNow().catch(() => { });
         if (pendingCount()) return ask('Ada catatan belum tersinkron', pendingCount() + ' perubahan masih ada di perangkat ini dan belum terkirim. Jika keluar sekarang, perubahan itu hilang. Tunggu sampai online, atau keluar saja?', 'Keluar, buang perubahan', () => logout(true));
     }
-    try { ['mm_cache_', 'mm_base_'].forEach(k => localStorage.removeItem(k + UID)); await getSb(); await sb.auth.signOut() } catch (x) { } location.reload()
+    try { tfaClear(); ['mm_cache_', 'mm_base_'].forEach(k => localStorage.removeItem(k + UID)); await getSb(); await sb.auth.signOut() } catch (x) { } location.reload()
 }
 $('#sw').onclick = () => { md = md == 'in' ? 'up' : 'in'; ui() };
 $('#lf').onsubmit = async e => {

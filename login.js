@@ -66,31 +66,35 @@ const PAGE = location.href.split(/[?#]/)[0];
 const rem = on => typeof setRemember === 'function' && setRemember(on);   // dari config.js
 const flash = (t, ok) => { const e = $('.err', $('#form-in')); e.className = ok ? 'err ok' : 'err'; e.textContent = t; go('in'); };
 
-async function busy(btn, fn) {
+async function busy(btn, fn, min = MIN_LOADING) {
   btn.classList.add('loading'); btn.disabled = true; btn.textContent = 'Memproses...';
-  try { await Promise.all([fn(), wait(MIN_LOADING)]); }
+  try { await Promise.all([fn(), wait(min)]); }
   finally { btn.classList.remove('loading'); btn.disabled = false; btn.textContent = btn.dataset.label; }
 }
 
-/* 6. Alur 2FA (sama seperti auth.js aplikasi): sudah punya faktor -> minta kode; belum -> daftarkan QR */
+/* 6. Alur 2FA setelah kata sandi benar. Bawaan: kode 6 digit lewat email (api/twofa). "Aplikasi Autentikator" hanya muncul di
+      "Coba cara lain" dan hanya bila pengguna sudah mengaktifkannya di Setelan (ada faktor TOTP terverifikasi).
+      Sesi dianggap lolos bila aal2 (autentikator) atau tercatat di session_2fa (kode email). */
+async function tfa(path, body) {
+  const s = await getSb(), { data } = await s.auth.getSession();
+  if (!data.session) throw new Error('Sesi berakhir. Masuk ulang.');
+  const r = await fetch('/api/twofa/' + path, { method: body ? 'POST' : 'GET', headers: { Authorization: 'Bearer ' + data.session.access_token, 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
+  return { ok: r.ok, status: r.status, j: await r.json().catch(() => ({})) };
+}
+const maskMail = e => { const [u, d] = String(e || '').split('@'); return d ? u.slice(0, 1) + '***@' + d : ''; };
 async function after() {
   const s = await getSb();
   const { data: a } = await s.auth.mfa.getAuthenticatorAssuranceLevel();
   if (a.currentLevel === 'aal2') return redirect();
-  const { data: f } = await s.auth.mfa.listFactors();
-  if (f.totp.length) { fid = f.totp[0].id; openModal('twofa'); } else await enroll(s);
-}
-async function enroll(s) {
-  const { data: f } = await s.auth.mfa.listFactors();
-  for (const x of f.all.filter(x => x.status === 'unverified')) await s.auth.mfa.unenroll({ factorId: x.id });
-  const { data, error } = await s.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Mirai ' + Date.now() });
-  if (error) throw error;
-  fid = data.id;
-  const raw = data.totp.qr_code.replace(/^data:image\/svg\+xml;[^,]*,/, ''), svg = raw.startsWith('<') ? raw : decodeURIComponent(raw);
-  const img = new Image(); img.alt = 'QR 2FA'; img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
-  const key = document.createElement('code'); key.textContent = data.totp.secret;
-  $('#m-qr').replaceChildren(img, key);
-  openModal('setup');
+  const st = await tfa('status').catch(() => null);               // null = server tidak terjangkau (offline)
+  const { data: g0 } = await s.auth.getSession();
+  if (st && st.ok && st.j.verified) { tfaMark(g0.session); return redirect(); }   // sesi ini sudah lolos lewat kode email
+  if (!st && tfaKnown(g0.session)) return redirect();             // offline: percaya penanda lokal; RLS tetap memutuskan akses data
+  const [{ data: f }, { data: g }] = await Promise.all([s.auth.mfa.listFactors(), s.auth.getSession()]);
+  totpId = f && f.totp && f.totp.length ? f.totp[0].id : '';      // listFactors().totp hanya berisi faktor terverifikasi: ada = toggle di Setelan menyala
+  mailTo = g.session && g.session.user ? g.session.user.email : '';
+  openModal('email');
+  sendCode();
 }
 async function ver(code) {
   const s = await getSb();
@@ -149,47 +153,99 @@ $$('.google').forEach(b => b.addEventListener('click', async () => {
 }));
 
 
-/* 8. Modal OTP: tiga mode (kode email, 2FA, aktivasi 2FA) */
-const modal = $('#modal'), boxes = $$('#otp input'), msg = $('#m-msg');
+/* 8. Modal OTP. Mode: signup (kode email pendaftaran), email (2FA bawaan), totp (autentikator), reset (autentikator saat reset sandi), recover (kode pemulihan).
+      Layar "Coba cara lain" (alt) berisi daftar metode alternatif. Semua layar 6 kotak terkirim otomatis begitu kotak ke-6 terisi. */
+const modal = $('#modal'), boxes = $$('#otp input'), msg = $('#m-msg'), main = $('#m-main'), alt = $('#m-alt');
 const MODES = {
   signup: { icon: 'fa-regular fa-envelope', title: 'Verifikasi Email Anda', text: 'Kami telah mengirimkan 6 digit kode ke email Anda.', btn: 'Verifikasi' },
-  twofa: { icon: 'fa-solid fa-shield-halved', title: 'Verifikasi Dua Langkah', text: 'Masukkan 6 digit kode dari aplikasi autentikator Anda.', btn: 'Verifikasi' },
-  setup: { icon: 'fa-solid fa-qrcode', title: 'Aktifkan 2FA', text: 'Pindai QR dengan Google Authenticator atau Authy, lalu masukkan 6 digit kodenya.', btn: 'Aktifkan dan masuk' },
+  email: { icon: 'fa-regular fa-envelope', title: 'Cek email Anda', text: '', btn: 'Verifikasi' },
+  totp: { icon: 'fa-solid fa-shield-halved', title: 'Aplikasi Autentikator', text: 'Masukkan 6 digit kode dari aplikasi autentikator Anda.', btn: 'Verifikasi' },
   reset: { icon: 'fa-solid fa-shield-halved', title: 'Verifikasi Dua Langkah', text: 'Masukkan 6 digit kode dari aplikasi autentikator untuk melanjutkan reset kata sandi.', btn: 'Verifikasi' },
-  recover: { icon: 'fa-solid fa-key', title: 'Kode Pemulihan', text: 'Masukkan salah satu kode pemulihan 2FA Anda (format XXXXX-XXXXX). Setelah berhasil, autentikator lama dilepas dan Anda memasang yang baru.', btn: 'Pulihkan akses' }
+  recover: { icon: 'fa-solid fa-key', title: 'Kode Pemulihan', text: 'Masukkan salah satu kode pemulihan 2FA Anda (format XXXXX-XXXXX). Setelah berhasil, autentikator lama dilepas dan Anda lanjut dengan kode email.', btn: 'Pulihkan akses' }
 };
-let mode = 'signup', prevMode = 'twofa', fid = '', pendingEmail = '', lastFocus;
+let mode = 'signup', prevMode = 'totp', fid = '', totpId = '', mailTo = '', pendingEmail = '', lastFocus, cdTimer = 0;
 
 function openModal(m = 'signup') {
-  const c = MODES[m], v = $('#verify');
+  const c = MODES[m], v = $('#verify'), d = $('#m-desc');
   mode = m;
   if (modal.hidden) lastFocus = document.activeElement;
-  $('#m-i').className = c.icon; $('#m-title').textContent = c.title; $('#m-desc').textContent = c.text;
-  $('#resend-row').hidden = m !== 'signup'; $('#m-qr').hidden = m !== 'setup';
+  main.hidden = false; alt.hidden = true;
+  $('#m-i').className = c.icon; $('#m-title').textContent = c.title;
+  if (m === 'email') { const b = document.createElement('b'); b.textContent = maskMail(mailTo); d.replaceChildren('Kami mengirim kode 6 digit ke ', b, '. Masukkan kode untuk melanjutkan.'); } else d.textContent = c.text;
+  $('#resend-row').hidden = !(m === 'signup' || m === 'email');
+  $('#alt-row').hidden = m !== 'email';
+  $('#m-back').hidden = !(m === 'totp' || m === 'recover');
   if (m !== 'recover') prevMode = m;   // untuk tombol kembali dari mode pemulihan
-  $('#otp').hidden = m === 'recover'; $('#rc-field').hidden = m !== 'recover'; $('#rc-row').hidden = !(m === 'twofa' || m === 'reset' || m === 'recover');
+  $('#otp').hidden = m === 'recover'; $('#rc-field').hidden = m !== 'recover'; $('#rc-row').hidden = !(m === 'totp' || m === 'reset' || m === 'recover');
   $('#rc-link').textContent = m === 'recover' ? 'Kembali ke kode autentikator' : 'Kehilangan HP? Pakai kode pemulihan'; $('#rc-in').value = '';
   v.dataset.label = c.btn; v.textContent = c.btn;
-  boxes.forEach(b => (b.value = '')); msg.textContent = '';
+  boxes.forEach(b => { b.value = ''; b.disabled = false; }); msg.textContent = ''; msg.className = 'm-msg';
   modal.hidden = false; (m === 'recover' ? $('#rc-in') : boxes[0]).focus();
 }
-function closeModal() { modal.hidden = true; lastFocus && lastFocus.focus(); }
+function closeModal() { clearInterval(cdTimer); modal.hidden = true; lastFocus && lastFocus.focus(); }
 const code = () => boxes.map(b => b.value).join('');
 function fill(digits, from = 0) {
   digits.split('').slice(0, boxes.length - from).forEach((d, i) => (boxes[from + i].value = d));
   boxes[Math.min(from + digits.length, boxes.length - 1)].focus();
+  if (code().length === boxes.length) submit();   // kirim otomatis
 }
 function fail(text) {
   const otp = $('#otp');
   msg.className = 'm-msg'; msg.textContent = text;
   otp.classList.remove('err'); void otp.offsetWidth; otp.classList.add('err');
 }
+const note = (text, cls = '') => { msg.className = 'm-msg ' + cls; msg.textContent = text; };
+
+// Hitung mundur tombol "Kirim Ulang" (0 = langsung aktif)
+function cooldown(sec) {
+  clearInterval(cdTimer);
+  const b = $('#resend'), tick = () => {
+    if (sec <= 0) { clearInterval(cdTimer); b.disabled = false; b.textContent = 'Kirim Ulang'; return; }
+    b.disabled = true; b.textContent = 'Kirim Ulang (' + sec-- + ')';
+  };
+  tick(); if (sec > 0) cdTimer = setInterval(tick, 1000);
+}
+// Minta server mengirim kode 6 digit ke email akun (batas kirim dijaga server)
+async function sendCode() {
+  const b = $('#resend'); clearInterval(cdTimer); b.disabled = true; b.textContent = 'Mengirim...';
+  note('Mengirim kode ke email Anda...', 'info');
+  try {
+    const r = await tfa('send', {});
+    if (r.ok) { note('Kode terkirim. Berlaku ' + (r.j.ttl || 10) + ' menit.', 'ok'); cooldown(r.j.wait || 30); }
+    else if (r.status === 429 && r.j.wait <= 30) { note('Kode sebelumnya masih berlaku. Cek email Anda.', 'info'); cooldown(r.j.wait); }
+    else if (r.status === 429) { note(r.j.error); cooldown(Math.min(r.j.wait || 60, 60)); }
+    else { note(r.j.error || 'Kode belum bisa dikirim. Coba lagi.'); cooldown(0); }
+  } catch (x) { note(x.message === 'Sesi berakhir. Masuk ulang.' ? x.message : NET); cooldown(0); }
+}
+
+// Layar "Coba cara lain"
+function openAlt() {
+  mode = 'alt'; main.hidden = true; alt.hidden = false; $('#m-back').hidden = false;
+  const list = $('#methods'); list.replaceChildren();
+  const add = (id, icon, title, sub) => {
+    const li = document.createElement('li'), b = document.createElement('button');
+    b.type = 'button'; b.className = 'method'; b.dataset.m = id;
+    b.innerHTML = '<i class="' + icon + '" aria-hidden="true"></i><span><b></b><small></small></span><i class="fa-solid fa-chevron-right" aria-hidden="true"></i>';
+    $('b', b).textContent = title; $('small', b).textContent = sub; li.append(b); list.append(li);
+  };
+  add('email', 'fa-regular fa-envelope', 'Kode lewat email', 'Kirim kode baru ke ' + maskMail(mailTo));
+  if (totpId) add('totp', 'fa-solid fa-shield-halved', 'Aplikasi Autentikator', 'Kode dari Google Authenticator, Authy, atau sejenisnya');   // hanya bila sudah diaktifkan di Setelan
+  list.querySelector('button').focus();
+}
+$('#alt-link').addEventListener('click', openAlt);
+$('#methods').addEventListener('click', e => {
+  const b = e.target.closest('.method'); if (!b) return;
+  if (b.dataset.m === 'email') { openModal('email'); sendCode(); } else { fid = totpId; openModal('totp'); }
+});
+$('#m-back').addEventListener('click', () => { if (mode === 'alt') openModal('email'); else if (mode === 'totp') openAlt(); else if (mode === 'recover') openModal(prevMode); });
 
 boxes.forEach((box, i) => {
   box.addEventListener('input', () => {
     const d = box.value.replace(/\D/g, '');
-    box.value = d.slice(-1);
+    if (d.length > 1) return fill(d, d.length >= boxes.length ? 0 : i);   // isi otomatis dari autofill SMS/email
+    box.value = d;
     if (d && i < boxes.length - 1) boxes[i + 1].focus();   // maju otomatis
+    if (code().length === boxes.length) submit();           // kirim otomatis di kotak ke-6
   });
   box.addEventListener('keydown', e => {
     if (e.key === 'Backspace' && !box.value && i > 0) {     // mundur otomatis
@@ -209,7 +265,7 @@ boxes.forEach((box, i) => {
 $('#rc-link').addEventListener('click', () => openModal(mode === 'recover' ? prevMode : 'recover'));
 $('#rc-in').addEventListener('input', e => { let v = e.target.value.toUpperCase().replace(/[^A-Z2-9]/g, '').slice(0, 10); e.target.value = v.length > 5 ? v.slice(0, 5) + '-' + v.slice(5) : v; });
 $('#rc-in').addEventListener('keydown', e => { if (e.key === 'Enter') $('#verify').click(); });
-// Pakai kode pemulihan: server memverifikasi, melepas autentikator lama, dan mengeluarkan sesi lain. Lalu pasang autentikator baru.
+// Pakai kode pemulihan: server memverifikasi, melepas autentikator lama, dan mengeluarkan sesi lain. Setelah itu lanjut dengan kode email.
 async function useRecovery(c) {
   const s = await getSb(), { data } = await s.auth.getSession();
   const r = await fetch('/api/recovery/use', { method: 'POST', headers: { Authorization: 'Bearer ' + data.session.access_token, 'Content-Type': 'application/json' }, body: JSON.stringify({ code: c }) }), j = await r.json().catch(() => ({}));
@@ -217,42 +273,47 @@ async function useRecovery(c) {
   await s.auth.refreshSession();
   return '';
 }
-$('#verify').addEventListener('click', async e => {
+async function submit() {
+  const v = $('#verify'); if (v.disabled) return;           // sudah diproses (kirim otomatis + tombol tidak boleh ganda)
   if (mode === 'recover') {
     if ($('#rc-in').value.replace(/-/g, '').length < 10) return fail('Masukkan kode pemulihan lengkap (10 karakter).');
     msg.textContent = '';
-    return busy(e.currentTarget, async () => {
+    return busy(v, async () => {
       try {
         const er = await useRecovery($('#rc-in').value); if (er) return fail(er);
-        if (prevMode === 'reset') { modal.hidden = true; openPw('new'); } else { msg.className = 'm-msg ok'; msg.textContent = 'Berhasil. Pasang autentikator baru.'; await after(); }
+        if (prevMode === 'reset') { modal.hidden = true; openPw('new'); } else { note('Autentikator lama dilepas. Lanjut dengan kode email.', 'ok'); await after(); }
       } catch (x) { fail(NET); }
     });
   }
   if (code().length < boxes.length) return fail('Masukkan 6 digit kode verifikasi.');
   msg.textContent = '';
-  await busy(e.currentTarget, async () => {
+  boxes.forEach(b => (b.disabled = true));
+  let good = false;
+  await busy(v, async () => {
     try {
-      let error;
+      let error, text = 'Kode salah atau kedaluwarsa.', renew = false;
       if (mode === 'signup') ({ error } = await (await getSb()).auth.verifyOtp({ email: pendingEmail, token: code(), type: 'signup' }));
+      else if (mode === 'email') { const r = await tfa('verify', { code: code() }); if (!r.ok) { error = true; text = r.j.error || text; renew = !!r.j.renew; } else tfaMark((await (await getSb()).auth.getSession()).data.session); }
       else error = await ver(code());
-      if (error) return fail('Kode salah atau kedaluwarsa.');
-      msg.className = 'm-msg ok'; msg.textContent = 'Berhasil diverifikasi.';
+      if (error) { fail(text); if (renew) cooldown(0); return; }
+      good = true; note('Berhasil diverifikasi.', 'ok');
       if (mode === 'signup') await after();                 // email terverifikasi -> lanjut ke 2FA
       else if (mode === 'reset') { modal.hidden = true; openPw('new'); }   // 2FA lolos -> buat sandi baru
       else redirect(true);
     } catch (x) { fail(NET); }
-  });
-});
+  }, 700);
+  if (!good) { boxes.forEach(b => { b.value = ''; b.disabled = false; }); boxes[0].focus(); }   // salah: kosongkan supaya bisa langsung ketik ulang
+}
+$('#verify').addEventListener('click', submit);
 
 $('#resend').addEventListener('click', async e => {
-  const b = e.currentTarget;
-  b.disabled = true; setTimeout(() => (b.disabled = false), 30000);
   boxes.forEach(x => (x.value = '')); boxes[0].focus();
+  if (mode === 'email') return sendCode();
+  const b = e.currentTarget; cooldown(30);
   try {
     const { error } = await (await getSb()).auth.resend({ type: 'signup', email: pendingEmail });
-    msg.className = error ? 'm-msg' : 'm-msg ok';
-    msg.textContent = error ? tr(error.message) : 'Kode baru telah dikirim.';
-  } catch (x) { msg.className = 'm-msg'; msg.textContent = NET; }
+    note(error ? tr(error.message) : 'Kode baru telah dikirim.', error ? '' : 'ok');
+  } catch (x) { note(NET); }
 });
 
 modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });

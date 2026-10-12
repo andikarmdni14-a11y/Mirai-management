@@ -3,7 +3,7 @@
 // kirim ulang paling cepat tiap 30 detik dan paling banyak 6 kali per jam. Batas itu dijaga di database oleh fungsi
 // email_otp_issue / email_otp_check (atomik, tahan permintaan paralel). Setelah kode benar, sesi dicatat di session_2fa dan
 // dianggap setara aal2 oleh RLS (public.authed()) dan oleh user() di api/_lib.js.
-const { c, S, H, esc, rest, user, mail, shell, wib, geo, label, J, guard } = require('../_lib');
+const { c, S, H, esc, rest, user, mail, shell, wib, geo, label, J, guard, dbFail } = require('../_lib');
 const TTL = 10;                                                  // menit
 const hmac = (uid, code) => c.createHmac('sha256', process.env.RECOVERY_SECRET || '').update('otp:' + uid + ':' + code).digest('hex');
 const rpc = (fn, args) => rest('rpc/' + fn, { method: 'POST', body: JSON.stringify(args) });
@@ -12,7 +12,7 @@ const mailOn = () => !!(process.env.RESEND_API_KEY && process.env.FROM_EMAIL);
 // Menandai sesi sebagai sudah lolos 2FA. Sekaligus membersihkan catatan sesi yang sudah lebih dari setahun.
 async function mark(uid, sids) {
   const rows = [...new Set(sids.filter(Boolean))].map(session_id => ({ user_id: uid, session_id, verified_at: new Date().toISOString() }));
-  if (rows.length) { const r = await rest('session_2fa', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify(rows) }); if (!r.ok) return false }
+  if (rows.length) { const r = await rest('session_2fa', { method: 'POST', headers: { Prefer: 'resolution=merge-duplicates' }, body: JSON.stringify(rows) }); if (!r.ok) { await dbFail('twofa mark session_2fa', r); return false } }
   await rest(`session_2fa?user_id=eq.${uid}&verified_at=lt.${encodeURIComponent(new Date(Date.now() - 365 * 864e5).toISOString())}`, { method: 'DELETE' }).catch(() => { });
   return true;
 }
@@ -34,7 +34,11 @@ module.exports = async (req, res) => {
       if (!u.email) return J(res, 400, { error: 'Akun ini tidak punya alamat email.' });
       const code = String(c.randomInt(0, 1e6)).padStart(6, '0');
       const r = await rpc('email_otp_issue', { p_user: u.id, p_hash: hmac(u.id, code), p_ttl_min: TTL });
-      if (!r.ok) return J(res, 500, { error: 'Gagal menyiapkan kode. Coba lagi.' });
+      if (!r.ok) {
+        const f = await dbFail('twofa/send rpc email_otp_issue', r);
+        return J(res, 500, { code: f.code, error: f.kind === 'schema' ? 'Database belum diperbarui: fungsi email_otp_issue tidak ditemukan. Jalankan bagian v23 di schema.sql (SQL Editor Supabase), lalu coba lagi.'
+          : f.kind === 'izin' ? 'Server tidak punya izin ke database. Periksa SUPABASE_SERVICE_ROLE_KEY di Vercel dan jalankan bagian v23.1 di schema.sql.' : 'Gagal menyiapkan kode. Coba lagi.' });
+      }
       const st = String(await r.json());
       if (st.startsWith('wait:')) return J(res, 429, { error: 'Tunggu sebentar sebelum meminta kode baru.', wait: +st.slice(5) });
       if (st.startsWith('cap:')) return J(res, 429, { error: 'Terlalu banyak permintaan kode. Coba lagi dalam ' + st.slice(4) + ' menit.', wait: +st.slice(4) * 60 });
@@ -52,7 +56,11 @@ module.exports = async (req, res) => {
       const code = String((req.body || {}).code || '').replace(/\D/g, '');
       if (code.length !== 6) return J(res, 400, { error: 'Masukkan 6 digit kode.' });
       const r = await rpc('email_otp_check', { p_user: u.id, p_hash: hmac(u.id, code) });
-      if (!r.ok) return J(res, 500, { error: 'Gagal memeriksa kode. Coba lagi.' });
+      if (!r.ok) {
+        const f = await dbFail('twofa/verify rpc email_otp_check', r);
+        return J(res, 500, { code: f.code, error: f.kind === 'schema' ? 'Database belum diperbarui: fungsi email_otp_check tidak ditemukan. Jalankan bagian v23 di schema.sql (SQL Editor Supabase), lalu coba lagi.'
+          : f.kind === 'izin' ? 'Server tidak punya izin ke database. Periksa SUPABASE_SERVICE_ROLE_KEY di Vercel dan jalankan bagian v23.1 di schema.sql.' : 'Gagal memeriksa kode. Coba lagi.' });
+      }
       const st = String(await r.json());
       if (st === 'expired') return J(res, 400, { error: 'Kode kedaluwarsa atau belum diminta. Kirim kode baru.', renew: true });
       if (st === 'locked') return J(res, 429, { error: 'Terlalu banyak tebakan salah. Kirim kode baru.', renew: true });
@@ -77,5 +85,5 @@ module.exports = async (req, res) => {
       return J(res, 200, { ok: true });
     }
     return J(res, 404, { error: 'Aksi tidak dikenal' });
-  } catch (e) { return J(res, 500, { error: e.message }) }
+  } catch (e) { console.error('[twofa] galat tak terduga:', e); return J(res, 500, { error: e.message }) }
 };

@@ -433,3 +433,17 @@ language sql stable security definer set search_path = public as $$
 $$;
 revoke all on function public.authed() from public, anon;
 grant execute on function public.authed() to authenticated;
+
+
+-- =====================================================================================================
+-- v23.1 (jalankan setelah v23; sudah termasuk bila Anda menjalankan seluruh berkas ini). Aman dijalankan ulang.
+-- Hak akses eksplisit untuk server (service_role, dipakai api/*). Proyek Supabase yang dibuat dengan "Default privileges for new
+-- entities" dimatikan TIDAK memberi hak akses otomatis pada tabel/fungsi baru di schema public, sehingga api/twofa gagal menulis
+-- session_2fa dan email_otps. Tidak memberi hak apa pun kepada anon/authenticated: akses mereka tetap diatur policy RLS di atas.
+-- =====================================================================================================
+grant usage on schema public to service_role;
+grant select, insert, update, delete on all tables in schema public to service_role;
+grant usage, select on all sequences in schema public to service_role;
+grant execute on function public.email_otp_issue(uuid, text, int), public.email_otp_check(uuid, text) to service_role;
+-- Muat ulang cache skema PostgREST supaya fungsi/tabel baru langsung terlihat oleh API.
+notify pgrst, 'reload schema';

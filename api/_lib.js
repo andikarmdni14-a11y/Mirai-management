@@ -9,7 +9,7 @@ const rest = (path, o) => fetch(S + '/rest/v1/' + path, { ...o, headers: { ...H,
 // 2FA lewat kode email (v23): sesi yang lolos dicatat di tabel session_2fa dan setara dengan aal2 (sama seperti public.authed() di schema.sql).
 async function emailOk(uid, sid) {
   if (!sid) return false;
-  try { const x = await rest(`session_2fa?select=session_id&user_id=eq.${uid}&session_id=eq.${encodeURIComponent(sid)}&limit=1`); return x.ok && (await x.json()).length > 0 } catch (e) { return false }
+  try { const x = await rest(`session_2fa?select=session_id&user_id=eq.${uid}&session_id=eq.${encodeURIComponent(sid)}&limit=1`); if (!x.ok) { await dbFail('emailOk session_2fa', x); return false } return (await x.json()).length > 0 } catch (e) { return false }
 }
 // Memeriksa sesi pengguna. level 'aal2' (bawaan): sesi harus sudah lolos 2FA (autentikator = aal2, atau kode email = session_2fa) dan belum dikeluarkan lewat "Perangkat aktif".
 // level 'any': sesi valid tingkat apa pun (dipakai oleh kode pemulihan dan alur kode email, saat pengguna belum lolos 2FA).
@@ -41,6 +41,18 @@ async function mail(to, subject, html) {
 // Kerangka email bermerek Mirai (sama dengan email-templates/ untuk Supabase Auth).
 const shell = (title, body, cta) => `<div style="background:#f4f4f5;padding:24px 12px;font-family:system-ui,-apple-system,Segoe UI,sans-serif"><div style="max-width:440px;margin:auto;background:#fff;border:1px solid #e4e4e7;border-radius:14px;padding:28px"><img src="${APP}/icons/icon-192.png" width="44" height="44" alt="Mirai Management" style="border-radius:10px"><h2 style="margin:16px 0 8px;color:#09090b;font-size:20px">${esc(title)}</h2><div style="color:#3f3f46;font-size:14px;line-height:1.6">${body}</div>${cta ? `<p style="margin:20px 0 0"><a href="${cta[1]}" style="display:inline-block;background:#047857;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600">${esc(cta[0])}</a></p>` : ''}<p style="margin:24px 0 0;color:#71717a;font-size:12px">Email otomatis dari Mirai Management. Jangan membalas email ini.</p></div></div>`;
 const wib = d => new Date(d).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' WIB';
+// Membaca galat Supabase (PostgREST) yang sebenarnya, mencatatnya ke Vercel Logs, lalu menggolongkan penyebabnya:
+//   'schema' = fungsi/tabel belum ada di database (SQL belum dijalankan atau cache skema belum dimuat ulang)
+//   'izin'   = kunci server salah atau role service_role belum punya hak akses
+//   'lain'   = sebab lain (lihat Vercel Logs)
+async function dbFail(tag, r) {
+  let raw = '', b = {}; try { raw = await r.text(); b = JSON.parse(raw) } catch (e) { }
+  const code = String(b.code || ''), msg = String(b.message || raw || '').slice(0, 300);
+  console.error('[' + tag + '] Supabase ' + r.status + ' ' + code + ' ' + msg);
+  const kind = (r.status === 404 || ['PGRST202', 'PGRST205', '42883', '42P01'].includes(code)) ? 'schema'
+    : (r.status === 401 || r.status === 403 || code === '42501' || /jwt|api key|permission denied/i.test(msg)) ? 'izin' : 'lain';
+  return { kind, code: code || String(r.status) };
+}
 const J = (res, s, o) => res.status(s).json(o);
 const guard = (req, res) => { if (!S || !K) { J(res, 503, { error: 'SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY belum diatur di server' }); return false } return true };
-module.exports = { c, S, K, H, APP, esc, claims, rest, user, label, mask, geo, mail, shell, wib, J, guard };
+module.exports = { c, S, K, H, APP, esc, claims, rest, user, label, mask, geo, mail, shell, wib, J, guard, dbFail };

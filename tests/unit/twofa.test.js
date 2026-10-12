@@ -134,3 +134,18 @@ test('totp-off: bila autentikator gagal dilepas, tidak ada yang berubah', async 
   reset({ failFactor: true }); const r = await call(twofa, { a: 'totp-off', token: A2 }); assert.equal(r.st, 502);
   assert.equal(db.session_2fa.length, 0); assert.equal(db.recovery_codes.length, 1); assert.equal(calls.mail.length, 0);
 });
+
+test('send: galat database dilaporkan jelas (fungsi belum ada / tanpa izin / lain) dan penyebab aslinya dicatat ke log', async () => {
+  const real = global.fetch, errs = [], orig = console.error; console.error = (...a) => errs.push(a.join(' '));
+  const failRpc = (status, body) => { global.fetch = async (url, o) => String(url).includes('/rpc/email_otp_issue') ? { ok: false, status, text: async () => JSON.stringify(body), json: async () => body } : real(url, o) };
+  try {
+    reset();
+    failRpc(404, { code: 'PGRST202', message: 'Could not find the function public.email_otp_issue' });
+    let r = await send(A1); assert.equal(r.st, 500); assert.equal(r.out.code, 'PGRST202'); assert.match(r.out.error, /schema\.sql/); assert.equal(calls.mail.length, 0);
+    failRpc(403, { code: '42501', message: 'permission denied for function email_otp_issue' });
+    r = await send(A1); assert.equal(r.st, 500); assert.match(r.out.error, /SUPABASE_SERVICE_ROLE_KEY/);
+    failRpc(500, { code: 'XX000', message: 'boom' });
+    r = await send(A1); assert.equal(r.st, 500); assert.equal(r.out.error, 'Gagal menyiapkan kode. Coba lagi.');
+    assert.ok(errs.some(e => e.includes('PGRST202') && e.includes('email_otp_issue')), 'penyebab sebenarnya harus tercatat di log');
+  } finally { global.fetch = real; console.error = orig }
+});

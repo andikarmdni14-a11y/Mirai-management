@@ -63,6 +63,8 @@ Saya menguji logika di Node dan alur di Chromium dengan Supabase tiruan (lihat `
 **Wajib dijalankan sebelum rilis (urutan penting):**
 1. Jalankan **bagian v23** di akhir `schema.sql` (dari komentar `-- v23`) di SQL Editor. Aman dijalankan ulang. Membuat tabel `email_otps`, `session_2fa`; fungsi `email_otp_issue`, `email_otp_check`, `email_2fa_ok`; dan **mengganti `authed()`** supaya menerima sesi yang lolos lewat kode email (selain `aal2`). Semua policy dan RPC memakai `authed()`, jadi tidak ada yang perlu diubah lagi.
    Periksa: `select proname from pg_proc where proname in ('email_otp_issue','email_otp_check','email_2fa_ok');` mengembalikan 3 baris.
+   **v23.1**: berkas `v23-fix.sql` berisi bagian v23 + hak akses eksplisit `service_role` + muat ulang cache API. Tempel seluruhnya di SQL Editor bila kode login gagal terkirim. Proyek Supabase yang dibuat dengan "Default privileges for new entities" dimatikan tidak memberi hak akses otomatis, sehingga `api/twofa` tidak bisa menulis `session_2fa`.
+   **Bila `/api/twofa/send` masih membalas 500**: buka Vercel > Logs, cari baris `[twofa/send rpc email_otp_issue] Supabase <status> <kode> <pesan>`. `PGRST202`/`404` = fungsi belum ada (jalankan `v23-fix.sql`; pastikan SQL Editor membuka proyek yang sama dengan `SUPABASE_URL`). `42501`/`401`/`403` = periksa `SUPABASE_SERVICE_ROLE_KEY` (harus kunci `service_role`, bukan anon/publishable) dan jalankan `v23-fix.sql`.
 2. Pastikan `RESEND_API_KEY`, `FROM_EMAIL`, dan `RECOVERY_SECRET` terisi di Vercel (lihat tabel di atas). Kode login memakai `RECOVERY_SECRET` untuk HMAC; tidak ada variabel baru.
 3. Deploy. Versi cache service worker naik ke `mirai-v27`; pengguna terpasang melihat tombol "Update Aplikasi".
 

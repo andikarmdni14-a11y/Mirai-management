@@ -149,3 +149,20 @@ test('send: galat database dilaporkan jelas (fungsi belum ada / tanpa izin / lai
     assert.ok(errs.some(e => e.includes('PGRST202') && e.includes('email_otp_issue')), 'penyebab sebenarnya harus tercatat di log');
   } finally { global.fetch = real; console.error = orig }
 });
+
+test('send: galat Resend dijelaskan (domain belum terverifikasi, kunci salah, format FROM_EMAIL) dan penyebab aslinya dicatat ke log', async () => {
+  const real = global.fetch, errs = [], orig = console.error; console.error = (...a) => errs.push(a.join(' '));
+  const failResend = (status, body) => { global.fetch = async (url, o) => String(url).includes('api.resend.com') ? { ok: false, status, json: async () => body } : real(url, o) };
+  try {
+    reset();
+    failResend(403, { statusCode: 403, name: 'validation_error', message: 'You can only send testing emails to your own email address (a@b.id). To send emails to other recipients, please verify a domain at resend.com/domains' });
+    let r = await send(A1); assert.equal(r.st, 502); assert.equal(r.out.code, 'resend-403'); assert.match(r.out.error, /domain pengirim/); assert.equal(db.email_otps.length, 0);
+    failResend(401, { statusCode: 401, name: 'validation_error', message: 'API key is invalid' });
+    r = await send(A1); assert.equal(r.st, 502); assert.match(r.out.error, /RESEND_API_KEY/);
+    failResend(422, { statusCode: 422, name: 'invalid_from_address', message: 'Invalid `from` field.' });
+    r = await send(A1); assert.equal(r.st, 502); assert.match(r.out.error, /FROM_EMAIL/);
+    failResend(500, { name: 'application_error', message: 'oops' });
+    r = await send(A1); assert.equal(r.st, 502); assert.equal(r.out.error, 'Kode belum bisa dikirim. Coba lagi sebentar.');
+    assert.ok(errs.some(e => e.includes('[mail] Resend 403') && e.includes('verify a domain')), 'alasan asli Resend harus ada di log');
+  } finally { global.fetch = real; console.error = orig }
+});

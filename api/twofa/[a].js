@@ -3,7 +3,7 @@
 // kirim ulang paling cepat tiap 30 detik dan paling banyak 6 kali per jam. Batas itu dijaga di database oleh fungsi
 // email_otp_issue / email_otp_check (atomik, tahan permintaan paralel). Setelah kode benar, sesi dicatat di session_2fa dan
 // dianggap setara aal2 oleh RLS (public.authed()) dan oleh user() di api/_lib.js.
-const { c, S, H, esc, rest, user, mail, shell, wib, geo, label, J, guard, dbFail } = require('../_lib');
+const { c, S, H, esc, rest, user, mail, shell, wib, geo, label, J, guard, dbFail, mailTry, mailHint } = require('../_lib');
 const TTL = 10;                                                  // menit
 const hmac = (uid, code) => c.createHmac('sha256', process.env.RECOVERY_SECRET || '').update('otp:' + uid + ':' + code).digest('hex');
 const rpc = (fn, args) => rest('rpc/' + fn, { method: 'POST', body: JSON.stringify(args) });
@@ -43,9 +43,9 @@ module.exports = async (req, res) => {
       if (st.startsWith('wait:')) return J(res, 429, { error: 'Tunggu sebentar sebelum meminta kode baru.', wait: +st.slice(5) });
       if (st.startsWith('cap:')) return J(res, 429, { error: 'Terlalu banyak permintaan kode. Coba lagi dalam ' + st.slice(4) + ' menit.', wait: +st.slice(4) * 60 });
       const g = geo(req);
-      const ok = await mail(u.email, code + ' adalah kode verifikasi Mirai Anda', shell('Kode verifikasi Anda',
+      const ml = await mailTry(u.email, code + ' adalah kode verifikasi Mirai Anda', shell('Kode verifikasi Anda',
         `<p>Masukkan kode ini untuk masuk ke Mirai Management:</p><p style="margin:16px 0;font-size:32px;font-weight:700;letter-spacing:8px;color:#09090b">${code}</p><p>Kode berlaku ${TTL} menit dan hanya bisa dipakai sekali. Permintaan datang dari <b>${label(req.headers['user-agent'])}</b>${g.city || g.country ? ' (' + [g.city, g.country].filter(Boolean).join(', ') + ')' : ''}.</p><p><b>Jangan bagikan kode ini kepada siapa pun</b>, termasuk yang mengaku dari Mirai. Bila bukan Anda yang masuk, abaikan email ini dan segera ganti kata sandi.</p>`));
-      if (!ok) { await rest(`email_otps?user_id=eq.${u.id}`, { method: 'DELETE' }).catch(() => { }); return J(res, 502, { error: 'Kode belum bisa dikirim. Coba lagi sebentar.' }) }
+      if (!ml.ok) { await rest(`email_otps?user_id=eq.${u.id}`, { method: 'DELETE' }).catch(() => { }); return J(res, 502, { code: 'resend-' + ml.status, error: mailHint(ml) || 'Kode belum bisa dikirim. Coba lagi sebentar.' }) }
       return J(res, 200, { ok: true, wait: 30, ttl: TTL });
     }
 

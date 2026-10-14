@@ -34,10 +34,30 @@ const mask = ip => { ip = String(ip || '').split(',')[0].trim(); if (/^\d+\.\d+\
 const geo = req => { const h = req.headers, dec = s => { try { return decodeURIComponent(s || '') } catch (e) { return s || '' } }; return { ip: mask(h['x-forwarded-for'] || h['x-real-ip']), city: dec(h['x-vercel-ip-city']), country: h['x-vercel-ip-country'] || '' } };
 
 // Email transaksional (Resend). Mengembalikan false bila belum dikonfigurasi atau gagal; tidak pernah melempar galat.
-async function mail(to, subject, html) {
-  if (!process.env.RESEND_API_KEY || !process.env.FROM_EMAIL || !to) return false;
-  try { const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: 'Bearer ' + process.env.RESEND_API_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: process.env.FROM_EMAIL, to, subject, html }) }); return r.ok } catch (e) { return false }
+// mailTry mengembalikan alasan kegagalan dari Resend ({ ok:false, status, name, message }) dan mencatatnya ke Vercel Logs. Tanpa keadaan bersama,
+// jadi aman dipanggil paralel. mail() tetap boolean untuk pemanggil lain.
+async function mailTry(to, subject, html) {
+  if (!process.env.RESEND_API_KEY || !process.env.FROM_EMAIL || !to) return { ok: false, status: 0, name: 'config', message: 'RESEND_API_KEY / FROM_EMAIL / penerima kosong' };
+  try {
+    const r = await fetch('https://api.resend.com/emails', { method: 'POST', headers: { Authorization: 'Bearer ' + process.env.RESEND_API_KEY, 'Content-Type': 'application/json' }, body: JSON.stringify({ from: process.env.FROM_EMAIL, to, subject, html }) });
+    if (r.ok) return { ok: true };
+    let b = {}; try { b = await r.json() } catch (e) { }
+    const f = { ok: false, status: r.status, name: String(b.name || ''), message: String(b.message || '').slice(0, 300) };
+    console.error('[mail] Resend ' + f.status + ' ' + f.name + ' ' + f.message);
+    return f;
+  } catch (e) { console.error('[mail] Resend tidak terjangkau: ' + e.message); return { ok: false, status: 0, name: 'network', message: String(e.message || e) } }
 }
+const mail = async (to, subject, html) => (await mailTry(to, subject, html)).ok;
+// Petunjuk yang bisa ditindaklanjuti dari galat Resend ('' bila penyebabnya tidak dikenali).
+const mailHint = f => {
+  const m = ((f.name || '') + ' ' + (f.message || '')).toLowerCase();
+  if (f.status === 0 && f.name === 'config') return 'Pengiriman email belum diatur di server (RESEND_API_KEY dan FROM_EMAIL).';
+  if (f.status === 401 || /api[ _]key|restricted/.test(m)) return 'RESEND_API_KEY tidak valid, dicabut, atau tidak boleh mengirim. Buat kunci baru (izin Sending access) di Resend lalu perbarui di Vercel.';
+  if (f.status === 403 || /verify a domain|not verified|testing emails/.test(m)) return 'Resend menolak: domain pengirim (FROM_EMAIL) belum diverifikasi, atau akun Resend masih mode uji yang hanya boleh mengirim ke email pemilik akun. Verifikasi domain di resend.com/domains.';
+  if (f.status === 422 || /invalid.*from|from.*invalid/.test(m)) return 'Format FROM_EMAIL tidak valid. Isi dengan: Mirai <no-reply@domain-anda.id> (tanpa tanda kutip tambahan).';
+  if (f.status === 429) return 'Batas kirim Resend tercapai. Coba lagi nanti.';
+  return '';
+};
 // Kerangka email bermerek Mirai (sama dengan email-templates/ untuk Supabase Auth).
 const shell = (title, body, cta) => `<div style="background:#f4f4f5;padding:24px 12px;font-family:system-ui,-apple-system,Segoe UI,sans-serif"><div style="max-width:440px;margin:auto;background:#fff;border:1px solid #e4e4e7;border-radius:14px;padding:28px"><img src="${APP}/icons/icon-192.png" width="44" height="44" alt="Mirai Management" style="border-radius:10px"><h2 style="margin:16px 0 8px;color:#09090b;font-size:20px">${esc(title)}</h2><div style="color:#3f3f46;font-size:14px;line-height:1.6">${body}</div>${cta ? `<p style="margin:20px 0 0"><a href="${cta[1]}" style="display:inline-block;background:#047857;color:#fff;text-decoration:none;padding:12px 20px;border-radius:8px;font-weight:600">${esc(cta[0])}</a></p>` : ''}<p style="margin:24px 0 0;color:#71717a;font-size:12px">Email otomatis dari Mirai Management. Jangan membalas email ini.</p></div></div>`;
 const wib = d => new Date(d).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta', day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) + ' WIB';
@@ -55,4 +75,4 @@ async function dbFail(tag, r) {
 }
 const J = (res, s, o) => res.status(s).json(o);
 const guard = (req, res) => { if (!S || !K) { J(res, 503, { error: 'SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY belum diatur di server' }); return false } return true };
-module.exports = { c, S, K, H, APP, esc, claims, rest, user, label, mask, geo, mail, shell, wib, J, guard, dbFail };
+module.exports = { c, S, K, H, APP, esc, claims, rest, user, label, mask, geo, mail, shell, wib, J, guard, dbFail, mailTry, mailHint };

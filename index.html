@@ -53,6 +53,7 @@
   <script defer src="config.js"></script>
   <script defer src="monitor.js"></script>
   <script defer src="core.js"></script>
+  <script defer src="components.js"></script>
   <script defer src="pwa.js"></script>
   <script defer src="sync.js"></script>
   <script defer src="app.js"></script>
@@ -96,11 +97,8 @@
   </div>
 
   <div id="app" hidden>
-    <nav class="nav" id="nv" aria-label="Navigasi utama">
-      <div class="br"><img src="img/logo-160.webp" alt="Mirai Logo" class="brand-logo" width="36" height="36"
-          loading="lazy" decoding="async"><span>Mirai Management</span></div>
-    </nav>
-    <header class="top"><div class="tb"><img src="img/logo-160.webp" alt="" class="brand-logo" width="32" height="32" decoding="async"><span>Mirai Management</span></div><span class="sy" id="sy" role="status" aria-live="polite" hidden></span><button class="avb" id="avb" type="button" aria-haspopup="dialog" aria-label="Menu profil"><span id="avl">A</span><i id="avd" hidden></i></button></header>
+    <div data-c="SidebarNavigation"></div>
+    <div data-c="TopBar"></div>
     <main id="main" tabindex="-1">
       <h2 id="ttl" class="t1 mb-18" hidden></h2>
       <div class="card" id="np" hidden>
@@ -109,32 +107,9 @@
       </div>
 
       <section id="v-dash">
-        <div class="grid g3">
-          <div class="card hero">
-            <div class="rw"><span class="rw jc-start gap-4"><small>Total
-                  saldo</small><button class="eyeb" id="eye" aria-label="Sembunyikan saldo"
-                  aria-pressed="false"></button></span><span class="chipmark">MIRAI</span></div>
-            <div class="big" id="bal"></div><small id="net"></small>
-          </div>
-          <div class="card"><small>Pemasukan bulan ini</small>
-            <div class="big in" id="inc"></div>
-          </div>
-          <div class="card"><small>Pengeluaran bulan ini</small>
-            <div class="big" id="exp"></div>
-          </div>
-        </div>
+        <div data-c="SummaryCards"></div>
         <div class="grid g2 wrow">
-          <div class="minw-0">
-            <div class="rw mb-10">
-              <h3 class="ct m-0">Dompet</h3><span class="rw"><button class="bt s g" data-act="link-account">Hubungkan akun</button><button class="bt s g" data-act="transfer">Transfer</button></span>
-            </div>
-            <div id="wl" role="region" aria-label="Daftar dompet. Geser ke samping untuk melihat dompet lainnya" tabindex="0"></div>
-            <div class="wnv" id="wnv" hidden>
-              <button type="button" class="wnb" id="wpv" aria-label="Dompet sebelumnya"><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
-              <div class="wdt" id="wdt"></div>
-              <button type="button" class="wnb" id="wnx" aria-label="Dompet berikutnya"><svg class="i" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
-            </div>
-          </div>
+          <div data-c="WalletSlider"></div>
           <div class="card" id="stk">
             <div class="rw">
               <div><small>Streak pencatatan</small>
@@ -147,16 +122,9 @@
             </div><small class="mt-12" id="stt"></small>
           </div>
         </div>
-        <div class="card mb-16" id="qk" hidden>
-          <div class="rw mb-10"><h3 class="ct m-0">Catat cepat</h3><button class="bt s g" data-act="go-auto">Atur template</button></div>
-          <div class="tpc" id="qkl"></div>
-        </div>
+        <div data-c="QuickActions"></div>
         <div id="dm">
-          <div class="card insight"><span class="ico" id="ii"></span>
-            <div><small>Wawasan prediktif <span id="ict"></span></small>
-              <p id="it"></p>
-            </div>
-          </div>
+          <div data-c="AlertBanner"></div>
           <div class="grid g2">
             <div class="card">
               <h3 class="ct">Tren pemasukan dan pengeluaran</h3>
@@ -378,9 +346,8 @@
     </dialog>
     <dialog id="lnd" aria-labelledby="lnt"><h3 class="ct" id="lnt">Hubungkan akun</h3><div id="lnl"></div><small class="m-8">Mirai hanya meminta izin baca saldo lewat Open Banking (OAuth 2.0). Kata sandi bank tidak pernah melewati Mirai.</small></dialog>
     <dialog id="ps" aria-labelledby="psn">
-      <div class="psh"><span class="avl" id="psa">A</span><div><b id="psn"></b><small id="pse"></small></div><button type="button" class="ib" id="psx" aria-label="Tutup"><i data-i="x"></i></button></div>
+      <div class="psh"><label class="avl avup" title="Ganti foto profil"><img class="avimg" id="psi" alt="Foto profil" width="52" height="52" hidden><span class="avfb" id="psf"><svg class="i" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span><input type="file" id="psup" accept="image/*" hidden aria-label="Ganti foto profil"></label><div><b id="psn"></b><small id="pse"></small></div><button type="button" class="ib" id="psx" aria-label="Tutup"><i data-i="x"></i></button></div>
       <div id="psm">
-        <button type="button" class="mi" id="bell" aria-expanded="false"><i data-i="bell"></i><span><b>Notifikasi</b><small>Pengingat dan peringatan anggaran</small></span><span class="bdg" id="bc" hidden></span></button>
         <button type="button" class="mi" id="pset"><i data-i="gear"></i><span><b>Setelan</b><small>Profil, privasi, notifikasi</small></span></button>
         <button type="button" class="mi" id="th"></button>
         <button type="button" class="mi" id="inst" hidden><i data-i="dl"></i><span><b>Pasang aplikasi</b><small>Tambahkan ke layar utama HP</small></span></button>

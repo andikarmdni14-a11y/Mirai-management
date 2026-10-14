@@ -64,7 +64,7 @@ function start(port) {
         if (u.pathname === '/api/recovery/generate') { be.rc = 10; return send(200, { codes: Array.from({ length: 10 }, (_, i) => 'ABCDE-FGH' + String.fromCharCode(74 + i)) }) }
         return send(200, { ok: true });
       }
-      let p = u.pathname === '/' ? '/index.html' : decodeURIComponent(u.pathname); const f = path.join(ROOT, p);
+      let p = (u.pathname === '/' || /^\/(ringkasan|transaksi|anggaran|tujuan|tagihan|laporan|ruang-bersama|utang-cicilan|otomatis|tabungan-amal)$/.test(u.pathname)) ? '/index.html' : decodeURIComponent(u.pathname); const f = path.join(ROOT, p);
       if (!f.startsWith(ROOT) || !fs.existsSync(f) || fs.statSync(f).isDirectory()) return send(404, 'not found', 'text/plain');
       let body = fs.readFileSync(f); if (p === '/config.js') body = Buffer.from(body.toString().replace(/const SB_SDK = '[^']*'/, "const SB_SDK = '/tests/fixtures/fake-supabase.js'"));
       send(200, body, MIME[path.extname(f)] || 'application/octet-stream');

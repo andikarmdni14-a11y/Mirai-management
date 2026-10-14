@@ -67,5 +67,11 @@
         }
       ]
     }
+  ],
+  "rewrites": [
+    {
+      "source": "/:view(ringkasan|transaksi|anggaran|tujuan|tagihan|laporan|ruang-bersama|utang-cicilan|otomatis|tabungan-amal)",
+      "destination": "/index.html"
+    }
   ]
 }

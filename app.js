@@ -68,7 +68,7 @@ function dashCharts() {
   if (!('IntersectionObserver' in window)) return run();
   DIO = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { DIO.disconnect(); run() } }, { rootMargin: '200px 0px' }); DIO.observe(box)
 }
-let cur = 'dash';
+let cur = MiraiUI.viewFromPath() || 'dash';
 function renW(id) { const w = W.find(x => x.id == id); pbox('Ubah nama dompet', [{ l: 'Nama dompet', v: w.n }], ([a]) => { const n = a.trim().replace(/[<>&"'\\]/g, '').slice(0, 20); if (!n) return toast('Isi nama dompet'); w.n = n; save(); cats(); go(cur); toast('Nama dompet diperbarui') }) }
 function delW(id) {
   if (W.length < 2) return toast('Minimal harus ada satu dompet'); const w = W.find(x => x.id == id), d = W.find(x => x.id != id);
@@ -176,7 +176,7 @@ function insights() {
   const i = sum('in', 1); if (i && o && r > 0) { const pr = o / dd * D; L.push([pr > i ? 2 : 0, pr > i ? 'warn' : 'trend', `Jika pola ini berlanjut, pengeluaran akhir bulan sekitar ${A(pr)}, ${pr > i ? 'melebihi' : 'masih di bawah'} pemasukanmu bulan ini.`]) }
   if (!L.length) L.push([0, 'sparkles', 'Catat beberapa transaksi lagi, dan analisis prediktif keuanganmu akan muncul di sini.']);
   L.sort((x, y) => y[0] - x[0]);
-  clearInterval(ITt); IT = 0; const show = () => { const e = $('#it'), n = IT % L.length, [sv, icn, html] = L[n]; e.innerHTML = html; $('#ii').innerHTML = ic(icn, 18); $('#ii').dataset.sv = sv; $('#ict').textContent = L.length > 1 ? (n + 1) + ' dari ' + L.length : ''; e.classList.remove('fu'); void e.offsetWidth; e.classList.add('fu'); IT++ }; show(); if (L.length > 1) ITt = setInterval(show, 7000)
+  clearInterval(ITt); IT = 0; const show = () => { const e = $('#it'), n = IT % L.length, [sv, icn, html] = L[n]; e.innerHTML = html; $('#ii').innerHTML = ic(icn, 18); $('#ii').dataset.sv = sv; $('#ab').dataset.sv = sv; $('#ict').textContent = L.length > 1 ? (n + 1) + ' dari ' + L.length : ''; e.classList.remove('fu'); void e.offsetWidth; e.classList.add('fu'); IT++ }; show(); if (L.length > 1) ITt = setInterval(show, 7000)
 }
 function dash() {
   if (!bnDone) { bnDone = 1; setTimeout(() => { billBanner(); lnkReturn() }, 3600) }
@@ -221,17 +221,18 @@ const dues = () => [...BL.filter(b => !b.done).map(b => ({ n: 'Tagihan ' + b.n, 
 const debtReconcile = () => { DT.forEach(d => { d.pays = (d.pays || []).filter(p => !p.tx || T.some(x => x.id == p.tx)) }); CL.forEach(c => { c.pays = (c.pays || []).filter(p => !p.tx || T.some(x => x.id == p.tx)) }); AMAL = AMAL.filter(c => c.k != 'in' || !c.tx || T.some(x => x.id == c.tx)) };
 function notif() {
   const L = OUT.filter(c => B[c] && spent(c) / B[c] >= .9).map(c => [`Anggaran ${c} hampir habis`, `${Math.round(spent(c) / B[c] * 100)}% terpakai bulan ini`]).concat(dues().filter(x => due(x) <= 7).sort((x, y) => due(x) - due(y)).map(x => [x.n, dtxt(due(x))]));
-  $('#nl').innerHTML = L.map(([a, b]) => `<div class="li"><span class="ic">${ic('alert', 15)}</span><div><b>${a}</b><small>${b}</small></div></div>`).join('') || '<small>Semua tenang. Tidak ada yang perlu dikhawatirkan.</small>'; $('#bc').textContent = L.length; $('#bc').hidden = !L.length; $('#avd').hidden = !L.length
+  $('#nl').innerHTML = L.map(([a, b]) => `<div class="li"><span class="ic">${ic('alert', 15)}</span><div><b>${a}</b><small>${b}</small></div></div>`).join('') || '<small>Semua tenang. Tidak ada yang perlu dikhawatirkan.</small>'; $('#bc').textContent = L.length; $('#bc').hidden = !L.length
 }
 const VW = { dash, tx, bud, goal, bill, rep: () => mod('reports').then(() => cur == 'rep' && rep()).catch(failMod), sp: () => mod('space').then(() => cur == 'sp' && ruang()).catch(failMod), debt: () => mod('debt').then(() => cur == 'debt' && debtView()).catch(failMod), auto: () => mod('auto').then(() => cur == 'auto' && autoView()).catch(failMod), amal: () => mod('charity').then(() => cur == 'amal' && amalView()).catch(failMod) };
-function go(v) { cur = v; Object.keys(VW).forEach(k => $('#v-' + k).hidden = k != v); $$('#nv a').forEach(a => { const on = a.dataset.v == v; a.classList.toggle('on', on); on ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current') }); $('#mre')?.classList.toggle('on', SEC.includes(v)); $('#ttl').hidden = v == 'dash'; $('#ttl').textContent = v == 'dash' ? '' : N.find(n => n[0] == v)[3]; prof(); VW[v](); notif(); typeof pruneCharts == 'function' && pruneCharts() }
+function go(v) { cur = v; Object.keys(VW).forEach(k => $('#v-' + k).hidden = k != v); $$('#nv a').forEach(a => { const on = a.dataset.v == v; a.classList.toggle('on', on); on ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current') }); $('#mre')?.classList.toggle('on', SEC.includes(v)); $('#ttl').hidden = v == 'dash'; $('#ttl').textContent = v == 'dash' ? '' : N.find(n => n[0] == v)[3]; prof(); VW[v](); notif(); typeof pruneCharts == 'function' && pruneCharts(); MiraiUI.syncPath(v) }
 const SEC = ['goal', 'bill', 'sp', 'debt', 'auto', 'amal'];
-$('#nv').insertAdjacentHTML('beforeend', N.map(n => `<a href="#" data-v="${n[0]}"${SEC.includes(n[0]) ? ' class="sec"' : ''}>${ic(n[1])}<span>${n[2]}</span></a>`).join('') + `<button type="button" class="more" id="mre" aria-haspopup="dialog">${ic('more')}<span>Lainnya</span></button>`);
+$('#nv').insertAdjacentHTML('beforeend', MiraiUI.NavLinks(N, SEC, ic));
 $('#mol').innerHTML = N.filter(n => SEC.includes(n[0])).map(n => `<button type="button" class="mi" data-v="${n[0]}">${ic(n[1], 22)}<span><b>${n[2]}</b><small>${n[3]}</small></span></button>`).join('');
 $('#mre').onclick = () => $('#mo').showModal();
 $('#mol').onclick = e => { const b = e.target.closest('button'); if (b) { $('#mo').close(); gos(b.dataset.v); scrollTo(0, 0) } };
 $('#mo').onclick = e => { if (e.target === e.currentTarget) $('#mo').close() };
-$('#nv').onclick = e => { const a = e.target.closest('a'); if (a) { e.preventDefault(); gos(a.dataset.v); scrollTo(0, 0) } };
+$('#nv').onclick = e => { const a = e.target.closest('a'); if (a && !(e.ctrlKey || e.metaKey || e.shiftKey)) { e.preventDefault(); gos(a.dataset.v); scrollTo(0, 0) } };
+addEventListener('popstate', () => { const v = MiraiUI.viewFromPath(); if (v && v != cur && !$('#app').hidden) go(v) });
 ['f1', 'f2', 'f3', 'fq'].forEach(i => $('#' + i).oninput = tx);
 const fill = () => $('#c').innerHTML = ($('#ty').value == 'in' ? IN : OUT).map(c => `<option>${c}</option>`).join(''); $('#ty').onchange = fill; function cats() { $('#f2').innerHTML = '<option value="">Semua kategori</option>' + [...OUT, ...IN, 'Transfer', 'Utang', 'Piutang'].map(c => `<option>${c}</option>`).join(''); $('#bcat').innerHTML = OUT.map(c => `<option>${c}</option>`).join(''); $('#wsel').innerHTML = W.map(w => `<option value="${w.id}">${w.n}</option>`).join(''); fill() }
 // v22: dialog tambah transaksi dengan template cepat dan kategori otomatis dari aturan
@@ -255,7 +256,7 @@ function quickTpl(id) {
 }
 function qkRender() {
   const e = $('#qk'); if (!e) return; e.hidden = false;
-  $('#qkl').innerHTML = TM.length ? TM.slice(0, 8).map(t => `<button type=\"button\" class=\"tpb\" data-q=\"${t.id}\">${E(t.n)}${t.amt ? '<small>' + R(t.amt) + '</small>' : ''}</button>`).join('') : '<small>Buat template untuk gaji, listrik, atau langganan agar mencatat cukup satu ketukan.</small>'
+  $('#qkl').innerHTML = MiraiUI.QuickChips(TM.slice(0, 8), E, R)
 }
 const toast = t => { const w = $('#toasts'), e = document.createElement('div'), x = document.createElement('span'); e.className = 'tt'; e.innerHTML = ic(/^(Gagal|Isi|Pilih|Saldo|Minimal|Butuh|Kategori|Mode)/.test(t) ? 'alert' : 'check', 16); x.textContent = t; e.append(x); w.append(e); try { if ($('dialog[open]') || !w.matches(':popover-open')) { try { w.hidePopover() } catch (z) { } w.showPopover() } } catch (z) { } setTimeout(() => { e.classList.add('out'); setTimeout(() => e.remove(), 300) }, 3000) };
 $('#tf').onsubmit = e => { e.preventDefault(); if (!num($('#a').value)) return toast('Isi jumlah transaksi'); const sh = shTag(); T.push({ id: nid(), ...sh, w: $('#wsel').value, date: $('#dt').value || ds(0), type: $('#ty').value, cat: $('#c').value, desc: $('#d').value.trim(), amt: num($('#a').value) }); save(); m.close(); e.target.reset(); fill(); toast(sh.sh ? 'Disimpan sebagai pengeluaran bersama' : 'Transaksi disimpan'); go(cur) };
@@ -341,7 +342,18 @@ $('#fab').addEventListener('click', () => { if (cur == 'sp') $('input[name=sc][v
 // ---- v19: profil, privasi otomatis, banner tagihan, push ----
 let FNM = '', pvInit = 0, bnDone = 0;
 const pvOn = () => !!UID && localStorage['mm_pv_' + UID] == '1', pvApply = () => document.body.classList.toggle('pv', pvOn());
-function prof() { const fn = FNM.trim() || US.split('@')[0] || '?', l = fn[0].toUpperCase(); $('#avl').textContent = l; $('#psa').textContent = l; $('#psn').textContent = fn; $('#pse').textContent = US; if (!pvInit) { pvInit = 1; pvApply() } }
+function prof() {
+  const fn = FNM.trim() || US.split('@')[0] || '?'; $('#psn').textContent = fn; $('#pse').textContent = US;
+  let u = ''; try { u = localStorage['mm_avatar_' + UID] || '' } catch (x) { }
+  ['av', 'ps'].forEach(p => { const im = $('#' + p + 'i'); im.hidden = !u; if (u) im.src = u; $('#' + p + 'f').hidden = !!u });
+  if (!pvInit) { pvInit = 1; pvApply() }
+}
+$('#psup').onchange = e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f || !/^image\//.test(f.type)) return toast('Gagal membaca gambar');
+  const im = new Image(); im.onerror = () => toast('Gagal membaca gambar');
+  im.onload = () => { const c = document.createElement('canvas'), s = 160, k = Math.max(s / im.width, s / im.height); c.width = c.height = s; c.getContext('2d').drawImage(im, (s - im.width * k) / 2, (s - im.height * k) / 2, im.width * k, im.height * k); URL.revokeObjectURL(im.src); try { localStorage['mm_avatar_' + UID] = c.toDataURL('image/jpeg', .85) } catch (x) { return toast('Gagal menyimpan foto profil') } prof(); toast('Foto profil diperbarui') };
+  im.src = URL.createObjectURL(f)
+};
 $('#avb').onclick = () => { prof(); $('#ps').showModal() };
 $('#psx').onclick = () => $('#ps').close();
 $('#ps').onclick = e => { if (e.target === e.currentTarget) $('#ps').close() };
@@ -386,7 +398,8 @@ const ACT = {
   reload: () => location.reload(),
   'link-account': () => navigator.onLine ? mod('accounts').then(lnkOpen).catch(failMod) : toast('Menghubungkan akun butuh koneksi internet'),
   transfer: () => xfer(), print: () => print(), logout: () => logout(),
-  'go-auto': () => gos('auto'), 'go-debt': () => gos('debt'), 'go-bill': () => gos('bill')
+  'go-auto': () => gos('auto'), 'go-debt': () => gos('debt'), 'go-bill': () => gos('bill'),
+  'add-cat': () => { gos('bud'); scrollTo(0, 0); setTimeout(() => $('#cn')?.focus(), 1100) }
 };
 // Keamanan dan privasi (security.js dimuat saat dibutuhkan)
 ['rc', 'dev', 'snap', 'export', 'del'].forEach(k => ACT['sec-' + k] = () => mod('security').then(() => SX[k]()).catch(failMod));

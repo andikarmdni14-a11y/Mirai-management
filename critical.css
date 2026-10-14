@@ -203,7 +203,7 @@ select:focus {
     user-select: none;
     background: #FFFFFF;
     border-radius: 22%;
-    padding: 8%;
+    padding: 4px;
     box-shadow: 0 0 0 1px rgba(9, 9, 11, .08);
 }
 

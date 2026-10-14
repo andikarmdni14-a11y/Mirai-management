@@ -802,7 +802,7 @@ dialog form {
     user-select: none;
     background: #FFFFFF;
     border-radius: 22%;
-    padding: 8%;
+    padding: 4px;
     box-shadow: 0 0 0 1px rgba(9, 9, 11, .08);
 }
 
@@ -813,7 +813,17 @@ dialog form {
 }
 
 .nav .br {
+    align-items: center;
     gap: 12px;
+}
+
+.nav .br .brand-logo {
+    width: 40px;
+    height: 40px;
+}
+
+.nav .br span {
+    white-space: nowrap;
 }
 
 /* v10: dompet, analisis, streak */

@@ -21,7 +21,7 @@
 
   const TopBar = () => `<header class="top"><div class="tb"><img src="img/logo-160.webp" alt="" class="brand-logo" width="32" height="32" decoding="async"><span>Mirai Management</span></div><span class="sy" id="sy" role="status" aria-live="polite" hidden></span><div class="tbr"><button type="button" class="ib bellb" id="bell" aria-label="Notifikasi" aria-expanded="false">${S(BELL, 20)}<span class="bdg" id="bc" hidden></span></button><button class="avb" id="avb" type="button" aria-haspopup="dialog" aria-label="Menu profil">${Avatar('av')}</button></div></header>`;
 
-  const SidebarNavigation = () => `<nav class="nav" id="nv" aria-label="Navigasi utama"><div class="br"><img src="img/logo-160.webp" alt="Mirai Logo" class="brand-logo" width="36" height="36" loading="lazy" decoding="async"><span>Mirai Management</span></div></nav>`;
+  const SidebarNavigation = () => `<nav class="nav" id="nv" aria-label="Navigasi utama"><div class="br"><img src="img/logo-160.webp" alt="Mirai Logo" class="brand-logo" width="40" height="40" decoding="async"><span>Mirai Management</span></div></nav>`;
   /* Item menu diisi app.js (daftar N ada di sana). href berisi path bersih; klik biasa ditangani tanpa muat ulang halaman. */
   const NavLinks = (items, sec, icon) => items.map(n => `<a href="/${ROUTES[n[0]]}" data-v="${n[0]}"${sec.includes(n[0]) ? ' class="sec"' : ''}>${icon(n[1])}<span>${n[2]}</span></a>`).join('') + `<button type="button" class="more" id="mre" aria-haspopup="dialog">${icon('more')}<span>Lainnya</span></button>`;
 

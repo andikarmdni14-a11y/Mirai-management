@@ -1,5 +1,5 @@
 // Ubah nama versi (V) setiap kali Anda mengubah file aplikasi agar cache lama terganti.
-const V = 'mirai-v28';
+const V = 'mirai-v29';
 // CORE wajib ada agar service worker terpasang (tanpa service worker aplikasi tidak bisa dipasang di HP). MORE berhasil-atau-lewati:
 // satu berkas yang gagal diunduh tidak boleh menggagalkan pemasangan. Pustaka CDN di-cache otomatis oleh handler fetch saat pertama dipakai.
 const CORE = ['./', 'index.html', 'login.html', 'login.css', 'login.js', 'critical.css', 'splash.css', 'theme-init.js', 'load-css.js', 'splash.js', 'style.css', 'core.js', 'components.js', 'sync.js', 'pwa.js', 'app.js', 'auth.js', 'lock.js', 'config.js', 'manifest.json', 'icons/icon-192.png', 'icons/icon-512.png'];
